@@ -100,18 +100,15 @@
         "short_texts": [
             "Hello, what's your name?",
             "I am fine, thank you.",
-            "See you at 8:00 AM",
             "She called his name many times.",
-            "I'm so in a state of wonder, this is so cool!",
-            "2000 years ago, the Romans built a great city.",
-            "The best way to predict the future is to invent it.",
+            "What a truly blissful day, it was!",
+            "Oops! I screwed up!",
             "The secret to creativity is knowing how to hide your sources. ",
-            "And lay me down in my cold bed and leave my shining lot.",
-            "This is a third-person horror game set in a residential area in 2000s Japan",
-            "Jim Wallace, the justice minister, acknowledged that prisoner numbers were a concern.",
-            "Six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob."
+            "And lay me down in my cold bed and leave my shining lot."
         ],
         "long_texts": [
+            "Jim Wallace, the justice minister, acknowledged that prisoner numbers were a concern.",
+            "Six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob.",
             "\"Go Home\" is a song by Stevie Wonder, released as the second single from his twentieth studio album, In Square Circle (1985). ",
             "When someone says 'say hi to X for me', they typically mean that they want you to convey their greetings or well wishes to a specific person (X). ",
             "In this world, there are many things that we cannot control, but we can control our own attitude and response to them. Life is full of challenges and difficulties, but as long as we maintain a positive attitude and work hard, we can overcome any obstacles.",
@@ -119,8 +116,9 @@
             "Despite the passage of time, I have not forgotten how prescient The Handmaid’s Tale was, and how prescient it felt. She described a future that didn’t seem so far-fetched. Living in America gives you a sense, sometimes, that the fundamentalist Christians, with their literalist readings of the Bible, would be capable of reading the story of an infertile woman who had her husband impregnate her handmaid and see that as a solution to infertility in the modern age. And Atwood not only gets the reading of the Bible correct, she also foresaw that we would wreck the planet at the level of reproduction, too. Sometimes, when another “crazy” thing comes to pass in American politics/culture, I find myself thinking that we’re moving closer to Atwood’s nightmare future. If you combine that prescience with Atwood’s deft handling of language – she really is a prose virtuosa – and you have the making of a classic."
         ],
         "extra_texts": [
-            "What a truly blissful day, it was!",
-            "Oops! I screwed up!"
+            "See you at 8:00 AM",
+            "2000 years ago, the Romans built a great city.",
+            "This is a third-person horror game set in a residential area in 2000s Japan."
         ]
     },
     "zh": {

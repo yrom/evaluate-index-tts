@@ -150,7 +150,7 @@ def load_audio_mel(audio: AudioPrompt, device):
     audio_mel_path = os.path.join("prompts", audio.lang, audio.name + ".npy")
     if os.path.exists(audio_mel_path):
         try:
-            print(f"Load from {audio_mel_path}")
+            # print(f"Load from {audio_mel_path}")
             cond_mel = np.load(audio_mel_path)
             cond_mel = torch.from_numpy(cond_mel)
             if device and cond_mel.device != device:
@@ -216,7 +216,7 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
         os.makedirs(output_dir, exist_ok=True)
     os.makedirs("prompts", exist_ok=True)
     results = []
-    with torch.no_grad():
+    with torch.inference_mode():
         prompts, texts = test_sets
         total_iterations = len(prompts) * len(texts)
         with tqdm(total=total_iterations, desc="Inference Progress") as pbar:
@@ -242,10 +242,10 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
                     # Save results
                     results.append(
                         {
-                            "a": prompt.name,
-                            "t": text,
-                            "o": output_path,
-                            "l": audio_length,
+                            "audio_prompt": prompt.name,
+                            "text": text,
+                            "output_path": output_path,
+                            "audio_length": audio_length,
                             "rtf": infer_duration / audio_length,
                             **model.get_stats(),
                         }
@@ -259,14 +259,14 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
             model.device, "fp16_" if model.is_fp16 else "", time.strftime("%Y%m%d-%H%M%S")
         ),
     )
-    csv_header = ["audio_prompt", "text", "output_path", "audio_length", "rtf"]
+    csv_header = results[0].keys()
     from csv import writer
 
-    with open(report, "w") as f:
+    with open(report, "w", encoding="utf-8") as f:
         cvs_writer = writer(f)
         cvs_writer.writerow(csv_header)
         for result in results:
-            cvs_writer.writerow([result["a"], result["t"], result["o"], result["l"], result["rtf"]])
+            cvs_writer.writerow([result[key][:10] if isinstance(result[key], str) else result[key] for key in csv_header])
     print(f"Evaluation results saved to {report}")
 
 
