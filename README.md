@@ -111,19 +111,20 @@ pip install torch torchaudio
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yrom/eval-index-tts.git
-cd eval-index-tts
+git clone https://github.com/yrom/evaluate-index-tts.git
+cd evaluate-index-tts
 pip install -r requirements.txt
 ```
 
-2. Download Index-TTS model weights
+2. Download Index-TTS model weights if need
 
 Download pretrained model from [Huggingface](https://huggingface.co/IndexTeam/Index-TTS) , e.g.:
 
 ```bash
+pip install "huggingface-hub[cli]"
 huggingface-cli download IndexTeam/Index-TTS \
     bigvgan_discriminator.pth bigvgan_generator.pth bpe.model dvae.pth gpt.pth unigram_12000.vocab \
-    --local-dir /path/to/checkpoints
+    --local-dir /path/to/index-tts/checkpoints
 ```
 
 3. Prepare the testset.json
