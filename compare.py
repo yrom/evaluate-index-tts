@@ -7,7 +7,7 @@ import sys
 
 def read_csv(file_path):
     csv_data = []
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding="utf-8") as file:
         reader = csv.reader(file)
         header = next(reader)
 

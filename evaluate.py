@@ -128,7 +128,7 @@ def load_dataset(test_set_json_path: str) -> DataSets:
     Returns
        DataSets: A DataSets object containing the test samples.
     """
-    with open(test_set_json_path, "r") as f:
+    with open(test_set_json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     return DataSets.from_dict(data)
