@@ -121,10 +121,8 @@ pip install -r requirements.txt
 Download pretrained model from [Huggingface](https://huggingface.co/IndexTeam/Index-TTS) , e.g.:
 
 ```bash
-pip install "huggingface-hub[cli]"
-huggingface-cli download IndexTeam/Index-TTS \
-    bigvgan_discriminator.pth bigvgan_generator.pth bpe.model dvae.pth gpt.pth unigram_12000.vocab \
-    --local-dir /path/to/index-tts/checkpoints
+pip install "huggingface_hub[cli]"
+huggingface-cli download IndexTeam/Index-TTS bigvgan_discriminator.pth bigvgan_generator.pth bpe.model dvae.pth gpt.pth unigram_12000.vocab --local-dir /path/to/index-tts/checkpoints
 ```
 
 3. Prepare the testset.json
