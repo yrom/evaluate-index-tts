@@ -26,6 +26,26 @@
             "lang": "zh"
         },
         {
+            "name": "Male-6",
+            "url": "https://styletts2.github.io/wavs/LibriTTS/GT/908-157963-0027.wav",
+            "lang": "en"
+        },
+        {
+            "name": "disgusted",
+            "url": "https://styletts2.github.io/wavs/LibriTTS/Ref/disgusted.wav",
+            "lang": "en"
+        },
+        {
+            "name": "amused",
+            "url": "https://styletts2.github.io/wavs/LibriTTS/Ref/amused.wav",
+            "lang": "en"
+        },
+        {
+            "name": "Male-angry",
+            "url": "https://styletts2.github.io/wavs/LibriTTS/Ref/anger.wav",
+            "lang": "en"
+        },
+        {
             "name": "Female-1",
             "url": "https://index-tts.github.io/examples_part1/Prompt/Female-1.wav",
             "lang": "zh"
@@ -51,6 +71,16 @@
             "lang": "en"
         },
         {
+            "name": "Female-5",
+            "url": "https://styletts2.github.io/wavs/VCTK/GT/p262_005.wav",
+            "lang": "en"
+        },
+        {
+            "name": "Female-angry",
+            "url": "https://styletts2.github.io/wavs/Emotion/LJSpeech/angry2.wav",
+            "lang": "en"
+        },
+        {
             "name": "Child-1",
             "url": "https://index-tts.github.io/examples_part1/Prompt/Child-1.wav",
             "lang": "zh"
@@ -70,14 +100,20 @@
         "short_texts": [
             "Hello, what's your name?",
             "I am fine, thank you.",
+            "See you at 8:00 AM",
             "She called his name many times.",
             "I'm so in a state of wonder, this is so cool!",
             "2000 years ago, the Romans built a great city.",
             "The best way to predict the future is to invent it.",
             "The secret to creativity is knowing how to hide your sources. ",
-            "See you at 8:00 AM"
+            "And lay me down in my cold bed and leave my shining lot.",
+            "This is a third-person horror game set in a residential area in 2000s Japan",
+            "Jim Wallace, the justice minister, acknowledged that prisoner numbers were a concern.",
+            "Six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob."
         ],
         "long_texts": [
+            "\"Go Home\" is a song by Stevie Wonder, released as the second single from his twentieth studio album, In Square Circle (1985). ",
+            "When someone says 'say hi to X for me', they typically mean that they want you to convey their greetings or well wishes to a specific person (X). ",
             "In this world, there are many things that we cannot control, but we can control our own attitude and response to them. Life is full of challenges and difficulties, but as long as we maintain a positive attitude and work hard, we can overcome any obstacles.",
             "As a non-native English speaker and someone who grew up in an Asian culture, English as a language appears very articulate and clear to me. And most well written English literature works, including poems, embody such almost straightforward characters, both in their wording and storytelling ... until I read Arundhati Roy’s The God of Small Things. I still remember how struck I was to see the English words be played in a way that’s mostly familiar to me in other Asian literature. The gentle singsong wording and wave-like storytelling combined with the vividness of English captured me like a dream. I’ve read many more English novels since, some as captivating and clever, but none carries the same magic.",
             "Despite the passage of time, I have not forgotten how prescient The Handmaid’s Tale was, and how prescient it felt. She described a future that didn’t seem so far-fetched. Living in America gives you a sense, sometimes, that the fundamentalist Christians, with their literalist readings of the Bible, would be capable of reading the story of an infertile woman who had her husband impregnate her handmaid and see that as a solution to infertility in the modern age. And Atwood not only gets the reading of the Bible correct, she also foresaw that we would wreck the planet at the level of reproduction, too. Sometimes, when another “crazy” thing comes to pass in American politics/culture, I find myself thinking that we’re moving closer to Atwood’s nightmare future. If you combine that prescience with Atwood’s deft handling of language – she really is a prose virtuosa – and you have the making of a classic."
@@ -95,10 +131,13 @@
             "预测未来的最好方法就是发明它。",
             "创造力的秘密在于知道如何隐藏你的来源。",
             "记得1键3连哦",
+            "我的世界空空如也，我走在冰冷的城市",
             "哼！你们不过是几条狗腿子，能有什么价值！"
         ],
         "long_texts": [
+            "近期，我市冒充身份类诈骗高发，7月份上半月仅2周时间就发生十几起，群众损失近100万元。",
             "随着人工智能的不断发展，机器学习和深度学习已经开始应用于各行各业，未来的工作方式和生活方式将由这些技术彻底改变，智能化时代即将来临。",
+            "如今不法分子的角色扮演套路越来越深，招数层出不穷，他们冒充各种身份，花样百出地翻新各种“套路”，让人无处可躲，防不胜防，一不小心就掉入他们的陷阱中。",
             "《盗梦空间》是由美国华纳兄弟影片公司出品的电影，由克里斯托弗·诺兰执导并编剧，莱昂纳多·迪卡普里奥、玛丽昂·歌迪亚、约瑟夫·高登-莱维特、艾利奥特·佩吉、汤姆·哈迪等联袂主演，2010年7月16日在美国上映，2010年9月1日在中国内地上映，2020年8月28日在中国内地重映。影片剧情游走于梦境与现实之间，被定义为“发生在意识结构内的当代动作科幻片”，讲述了由莱昂纳多·迪卡普里奥扮演的造梦师，带领特工团队进入他人梦境，从他人的潜意识中盗取机密，并重塑他人梦境的故事。",
             "关于情欲与政治在小说中的书写，我们从晚清的“言情小说”中已经可以窥见其特殊的关系。黄子平曾指出，清末民初的“言情小说”在小说“建国方略”中的地位，以及其在文学史中的实际演进，是一个饶有趣味的研究课题。他还提到，当时“小说界革命”对“性”的态度呈现出一种欲拒还迎的姿态，往往隐隐流露出某种复杂的情感。此外，王德威也指出，在曾朴的《孽海花》（1905）中，情欲想象与国家论述之间的复杂关系已有所展现：“全书以名妓赛金花与状元洪钧、八国联军统帅瓦德西的恋情为主线，侧面描绘了晚清三十年的历史动荡。”",
             "凝神打量四人：最左一人短小精悍，下巴尖削，双手分拿一对峨嵋钢刺。第二个又高又肥，便如是一座铁塔摆在地下，身前放着一块大石碑，碑上写的是“先考黄府君诚本之墓”，这自是一块墓碑了，不知放在身前有何用意？黄诚本？没曾听说江湖上有这么一位前辈高手啊！第三个中等身材，白净脸皮，若不是一副牙齿向外凸出了一寸，一个鼻头低陷了半寸，倒算得上是一位相貌英俊的人物，他手中拿的是一对流星锤。最右边的是个病夫模样的中年人，衣衫褴褛，咬着一根旱烟管，双目似睁似闭，嘴里慢慢喷着烟雾，竟没将这一队七十来人的镖队瞧在眼里。"

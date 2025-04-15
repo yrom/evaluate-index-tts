@@ -113,6 +113,8 @@ pip install torch torchaudio
 ```bash
 git clone https://github.com/yrom/evaluate-index-tts.git
 cd evaluate-index-tts
+git lfs install
+git lfs pull
 pip install -r requirements.txt
 ```
 
