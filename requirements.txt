@@ -1,0 +1,5 @@
+torch
+torchaudio
+transformers==4.36.2
+omegaconf==2.3.0
+indextts @ git+https://github.com/yrom/index-tts.git@feat/opt-infer

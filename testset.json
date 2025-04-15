@@ -1,0 +1,132 @@
+{
+    "audio_prompts": [
+        {
+            "name": "Male-1",
+            "url": "https://index-tts.github.io/examples_part1/Prompt/Male-1.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Male-2",
+            "url": "https://index-tts.github.io/examples_part1/Prompt/Male-2.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Male-3",
+            "url": "https://bytedancespeech.github.io/seedtts_tech_report/audios/ZeroShotICL_samples/EN/prompt/4245145269330795065.wav",
+            "lang": "en"
+        },
+        {
+            "name": "Male-4",
+            "url": "https://bytedancespeech.github.io/seedtts_tech_report/audios/ZeroShotICL_samples/ZH/prompt/8913957783621352198.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Male-5",
+            "url": "https://bytedancespeech.github.io/seedtts_tech_report/audios/ZeroShotICL_samples/ZH/prompt/2631296891109983590.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Female-1",
+            "url": "https://index-tts.github.io/examples_part1/Prompt/Female-1.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Female-2",
+            "url": "https://index-tts.github.io/examples_part1/Prompt/Female-2.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Female-3",
+            "url": "https://giantailab.github.io/bailingtts_tech_report/audios/mandarin_P5.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Female-4",
+            "url": "https://giantailab.github.io/bailingtts_tech_report/audios/mandarin_P6.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Female-5",
+            "url": "https://bytedancespeech.github.io/seedtts_tech_report/audios/ZeroShotICL_samples/EN/prompt/2486365921931244890.wav",
+            "lang": "en"
+        },
+        {
+            "name": "Child-1",
+            "url": "https://index-tts.github.io/examples_part1/Prompt/Child-1.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Child-2",
+            "url": "https://giantailab.github.io/bailingtts_tech_report/audios/mandarin_P4.wav",
+            "lang": "zh"
+        },
+        {
+            "name": "Child-3",
+            "url": "https://giantailab.github.io/bailingtts_tech_report/audios/mandarin_P7.wav",
+            "lang": "zh"
+        }
+    ],
+    "en": {
+        "short_texts": [
+            "Hello, what's your name?",
+            "I am fine, thank you.",
+            "She called his name many times.",
+            "I'm so in a state of wonder, this is so cool!",
+            "2000 years ago, the Romans built a great city.",
+            "The best way to predict the future is to invent it.",
+            "The secret to creativity is knowing how to hide your sources. ",
+            "See you at 8:00 AM"
+        ],
+        "long_texts": [
+            "In this world, there are many things that we cannot control, but we can control our own attitude and response to them. Life is full of challenges and difficulties, but as long as we maintain a positive attitude and work hard, we can overcome any obstacles.",
+            "As a non-native English speaker and someone who grew up in an Asian culture, English as a language appears very articulate and clear to me. And most well written English literature works, including poems, embody such almost straightforward characters, both in their wording and storytelling ... until I read Arundhati Roy’s The God of Small Things. I still remember how struck I was to see the English words be played in a way that’s mostly familiar to me in other Asian literature. The gentle singsong wording and wave-like storytelling combined with the vividness of English captured me like a dream. I’ve read many more English novels since, some as captivating and clever, but none carries the same magic.",
+            "Despite the passage of time, I have not forgotten how prescient The Handmaid’s Tale was, and how prescient it felt. She described a future that didn’t seem so far-fetched. Living in America gives you a sense, sometimes, that the fundamentalist Christians, with their literalist readings of the Bible, would be capable of reading the story of an infertile woman who had her husband impregnate her handmaid and see that as a solution to infertility in the modern age. And Atwood not only gets the reading of the Bible correct, she also foresaw that we would wreck the planet at the level of reproduction, too. Sometimes, when another “crazy” thing comes to pass in American politics/culture, I find myself thinking that we’re moving closer to Atwood’s nightmare future. If you combine that prescience with Atwood’s deft handling of language – she really is a prose virtuosa – and you have the making of a classic."
+        ],
+        "extra_texts": [
+            "What a truly blissful day, it was!",
+            "Oops! I screwed up!"
+        ]
+    },
+    "zh": {
+        "short_texts": [
+            "你好，你叫什么名字？",
+            "这太酷了！",
+            "2000年前，罗马人建造了一座伟大的城市。",
+            "预测未来的最好方法就是发明它。",
+            "创造力的秘密在于知道如何隐藏你的来源。",
+            "记得1键3连哦",
+            "哼！你们不过是几条狗腿子，能有什么价值！"
+        ],
+        "long_texts": [
+            "随着人工智能的不断发展，机器学习和深度学习已经开始应用于各行各业，未来的工作方式和生活方式将由这些技术彻底改变，智能化时代即将来临。",
+            "《盗梦空间》是由美国华纳兄弟影片公司出品的电影，由克里斯托弗·诺兰执导并编剧，莱昂纳多·迪卡普里奥、玛丽昂·歌迪亚、约瑟夫·高登-莱维特、艾利奥特·佩吉、汤姆·哈迪等联袂主演，2010年7月16日在美国上映，2010年9月1日在中国内地上映，2020年8月28日在中国内地重映。影片剧情游走于梦境与现实之间，被定义为“发生在意识结构内的当代动作科幻片”，讲述了由莱昂纳多·迪卡普里奥扮演的造梦师，带领特工团队进入他人梦境，从他人的潜意识中盗取机密，并重塑他人梦境的故事。",
+            "关于情欲与政治在小说中的书写，我们从晚清的“言情小说”中已经可以窥见其特殊的关系。黄子平曾指出，清末民初的“言情小说”在小说“建国方略”中的地位，以及其在文学史中的实际演进，是一个饶有趣味的研究课题。他还提到，当时“小说界革命”对“性”的态度呈现出一种欲拒还迎的姿态，往往隐隐流露出某种复杂的情感。此外，王德威也指出，在曾朴的《孽海花》（1905）中，情欲想象与国家论述之间的复杂关系已有所展现：“全书以名妓赛金花与状元洪钧、八国联军统帅瓦德西的恋情为主线，侧面描绘了晚清三十年的历史动荡。”",
+            "凝神打量四人：最左一人短小精悍，下巴尖削，双手分拿一对峨嵋钢刺。第二个又高又肥，便如是一座铁塔摆在地下，身前放着一块大石碑，碑上写的是“先考黄府君诚本之墓”，这自是一块墓碑了，不知放在身前有何用意？黄诚本？没曾听说江湖上有这么一位前辈高手啊！第三个中等身材，白净脸皮，若不是一副牙齿向外凸出了一寸，一个鼻头低陷了半寸，倒算得上是一位相貌英俊的人物，他手中拿的是一对流星锤。最右边的是个病夫模样的中年人，衣衫褴褛，咬着一根旱烟管，双目似睁似闭，嘴里慢慢喷着烟雾，竟没将这一队七十来人的镖队瞧在眼里。"
+        ],
+        "extra_texts": [
+            "我爱你的英语是”I love you“",
+            "共465篇，约315万字",
+            "骑行速度大约10km/h",
+            "2.5平方电线的载流量是20A",
+            "他的电话：135-4567-8900",
+            "2002年的第一场雪，下在了2003年",
+            "他这条裤子是2012年买的，花了200块钱",
+            "现在是北京时间2025年01月11日 20:00",
+            "纵然读了千遍《论语》，不明夫子微言大义，也是枉然。",
+            "他这条视频点赞3000+，评论1000+，收藏500+",
+            "IndexTTS 正式发布1.0版本了，效果666",
+            "10:00 AM 开会不要迟到哦",
+            "长这么大了还不会算1+1=2吗？",
+            "你好，我是一个AI语音助手，我可以帮助你完成很多任务。",
+            "苹果于2030/1/2发布新 iPhone 2X 系列手机，最低售价仅 ¥12999",
+            "”衣裳“不读衣chang2，而是读衣shang5",
+            "最zhong4要的是：不要chong2蹈覆辙",
+            "受不liao3你了",
+            "疫情让每一位默默奉献的人们在历史上写下zhong4 zhong4的一笔",
+            "这北京城里无故的she2堕杀了丫头",
+            "今天的阳光洒在身上，感觉整个人都充满了活力和快乐。",
+            "自从你离开后，我总感觉生活像失去了色彩，每天像是行尸走肉般地度过，再也找不到那份曾经的温暖与安慰。",
+            "听着暴风雨在窗外咆哮，小丽蜷缩在床上，害怕得连呼吸都不敢太大声。"
+        ]
+    }
+}
