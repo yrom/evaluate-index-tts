@@ -149,21 +149,35 @@ def prepare_prompts(test_set: DataSets):
 def load_audio_mel(audio: AudioPrompt, device):
     audio_mel_path = os.path.join("prompts", audio.lang, audio.name + ".npy")
     if os.path.exists(audio_mel_path):
-        print(f"Load from {audio_mel_path}")
-        cond_mel = np.load(audio_mel_path)
-        cond_mel = torch.from_numpy(cond_mel)
-        if device and cond_mel.device != device:
-            cond_mel = cond_mel.to(device)
-        return cond_mel
+        try:
+            print(f"Load from {audio_mel_path}")
+            cond_mel = np.load(audio_mel_path)
+            cond_mel = torch.from_numpy(cond_mel)
+            if device and cond_mel.device != device:
+                cond_mel = cond_mel.to(device)
+            return cond_mel
+        except Exception as e:
+            print(f"Failed to load prebuilt {audio_mel_path}")
+            print("Removing the corrupted file.")
+            os.remove(audio_mel_path)
     audio_path = os.path.join("prompts", audio.lang, audio.name + ".wav")
     if not os.path.exists(audio_path):
-        from urllib.request import urlretrieve
+        try:
+            from urllib.request import urlretrieve
+            os.makedirs(os.path.dirname(audio_path), exist_ok=True)
+            urlretrieve(audio.url, audio_path)
+            # print(f"Download '{audio.name}' from {audio.url}")
+        except Exception as e:
+            import requests
+            response = requests.get(audio.url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"}, stream=True)
+            if response.status_code == 200:
+                with open(audio_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            else:
+                raise ValueError(f"Failed to download {audio.url}: {response.status_code}")
 
-        os.makedirs(os.path.dirname(audio_path), exist_ok=True)
-        urlretrieve(audio.url, audio_path)
-        print(f"Download '{audio.name}' from {audio.url}")
-
-    print(f"Load from {audio_path}")
+    # print(f"Load from {audio_path}")
     audio, sr = torchaudio.load(audio_path)
     audio = torch.mean(audio, dim=0, keepdim=True)
     if device:
@@ -204,35 +218,39 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
     results = []
     with torch.no_grad():
         prompts, texts = test_sets
-        for prompt in tqdm(prompts, desc="Inference"):
-            audio_prompt = load_audio_mel(prompt, model.device)
+        total_iterations = len(prompts) * len(texts)
+        with tqdm(total=total_iterations, desc="Inference Progress") as pbar:
 
-            for text in texts:
-                model.stats = {}
-                normalized_text = model.preprocess_text(text)
-                start_time = time.perf_counter()
-                audio, sr = model.infer_e2e(audio_prompt, normalized_text, verbose=verbose)
-                end_time = time.perf_counter()
-                infer_duration = end_time - start_time
-                audio_length = audio.shape[1] / sr
+            for prompt in prompts:
+                audio_prompt = load_audio_mel(prompt, model.device)
 
-                # Generate audio
-                if output_dir:
-                    output_path = os.path.join(output_dir, f"spk_{int(end_time)}.wav")
-                    torchaudio.save(output_path, audio.cpu(), sr)
-                else:
-                    output_path = None
-                # Save results
-                results.append(
-                    {
-                        "a": prompt.name,
-                        "t": text,
-                        "o": output_path,
-                        "l": audio_length,
-                        "rtf": infer_duration / audio_length,
-                        **model.get_stats(),
-                    }
-                )
+                for text in texts:
+                    model.stats = {}
+                    normalized_text = model.preprocess_text(text)
+                    start_time = time.perf_counter()
+                    audio, sr = model.infer_e2e(audio_prompt, normalized_text, verbose=verbose)
+                    end_time = time.perf_counter()
+                    infer_duration = end_time - start_time
+                    audio_length = audio.shape[1] / sr
+
+                    # Generate audio
+                    if output_dir:
+                        output_path = os.path.join(output_dir, f"spk_{int(end_time)}.wav")
+                        torchaudio.save(output_path, audio.cpu(), sr)
+                    else:
+                        output_path = None
+                    # Save results
+                    results.append(
+                        {
+                            "a": prompt.name,
+                            "t": text,
+                            "o": output_path,
+                            "l": audio_length,
+                            "rtf": infer_duration / audio_length,
+                            **model.get_stats(),
+                        }
+                    )
+                    pbar.update(1)
 
     # Save results to csv
     report = os.path.join(
