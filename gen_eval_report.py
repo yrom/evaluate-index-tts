@@ -83,11 +83,24 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
         </style>
     </head>
     <body>
+        <header>
         <h1>Evaluation Report</h1>
+        <details><summary>Device Info</summary>
+        <p>DeviceInfo: <br/>
+        {% for info in device_info %}
+            {{ info }}<br/>
+        {% endfor %}
+        </p>
+        <p>
+        <a href="https://github.com/yrom/evaluate-index-tts>">Get evaluate scripts</a>
+        </p>
+        </details>
+        </header>
+        <h2>Baseline and Results</h2>
         <ul>
-            <li>Baseline: {{ baseline_name }}</li>
+            <li>Baseline:  <a href="outputs/{{baseline_name}}.csv" >{{ baseline_name }}</a></li>
             {% for  file in files %}
-                <li>Result {{ loop.index }}: {{ file }}</li>
+                <li>Result {{ loop.index }}: <a href="outputs/{{file}}.csv" >{{ file }} </a></li>
             {% endfor %}
         </ul>
         <h2>Evaluation Results</h2>
@@ -135,10 +148,38 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
                 {% endfor %}
             </tbody>
         </table>
+
     </body>
     </html>
     """)
-    return template.render(result_dict=result_dict, merge_key=merge_key, baseline_name=baseline_name, files=files)
+    import platform
+    import psutil
+    import torch
+
+    device_info = [
+        f"Platform: {platform.system()} {platform.release()} {platform.architecture()[0]}",
+        f"Machine: {platform.machine()}",
+        f"CPU Cores: {psutil.cpu_count(logical=False)} physical, {psutil.cpu_count(logical=True)} logical",
+        f"Memory: {round(psutil.virtual_memory().total / (1024 ** 3), 2)} GB",
+        f"CUDA Available: {'Yes' if torch.cuda.is_available() else 'No'}",
+    ]
+
+    if torch.cuda.is_available():
+        device_info.extend([
+            f"CUDA Version: {torch.cuda.__version__}",
+            f"GPU: {torch.cuda.get_device_name(0)}",
+            f"GPU Memory: {round(torch.cuda.get_device_properties(0).total_memory / (1024 ** 3), 2)} GB",
+        ])
+    elif torch.mps.is_available():
+        device_info.extend(
+            [
+                "MPS Available: Yes",
+            ]
+        )
+
+
+
+    return template.render(result_dict=result_dict, merge_key=merge_key, baseline_name=baseline_name, files=files, device_info=device_info)
 
 def main(baseline_csv: str, files: list[str]):
     baseline = read_csv(baseline_csv)
