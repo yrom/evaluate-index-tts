@@ -168,7 +168,7 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
 
     if torch.cuda.is_available():
         device_info.extend([
-            f"CUDA Version: {torch.cuda.__version__}",
+            f"CUDA Version: {torch.version.cuda}",
             f"GPU: {torch.cuda.get_device_name(0)}",
             f"GPU Memory: {round(torch.cuda.get_device_properties(0).total_memory / (1024 ** 3), 2)} GB",
         ])
