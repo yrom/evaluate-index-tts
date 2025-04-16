@@ -92,11 +92,13 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
         {% endfor %}
         </p>
         <p>
-        <a href="https://github.com/yrom/evaluate-index-tts>">Get evaluate scripts</a>
+        <a href="https://github.com/yrom/evaluate-index-tts">Get evaluate scripts</a>
+        <br/>
         </p>
         </details>
         </header>
         <h2>Baseline and Results</h2>
+        <p>Testset: https://github.com/yrom/evaluate-index-tts/blob/main/testset.json </p>
         <ul>
             <li>Baseline:  <a href="outputs/{{baseline_name}}.csv" >{{ baseline_name }}</a></li>
             {% for  file in files %}
