@@ -19,33 +19,32 @@ def read_csv(file_path):
             csv_data.append(result)
     return csv_data
 
+def calculate_floats(data, key):
+    """
+    Calculate the mean, std, min, and max of a list of floats.
+    """
+    values = [float(d[key]) for d in data]
+    mean = sum(values) / len(values)
+    std = (sum((x - mean) ** 2 for x in values) / len(values)) ** 0.5
+    min_value = min(values)
+    max_value = max(values)
+    return mean, std, min_value, max_value
 
 def compare_results(file1, file2):
     data1 = read_csv(file1)
     data2 = read_csv(file2)
 
     # Compare the two lists of dictionaries
-    rtf1 = [float(d['rtf']) for d in data1]
-    rtf2 = [float(d["rtf"]) for d in data2]
 
-    rtf1_mean = sum(rtf1) / len(rtf1)
-    rtf2_mean = sum(rtf2) / len(rtf2)
-    rtf1_std = (sum((x - rtf1_mean) ** 2 for x in rtf1) / len(rtf1)) ** 0.5
-    rtf2_std = (sum((x - rtf2_mean) ** 2 for x in rtf2) / len(rtf2)) ** 0.5
-    rtf1_min = min(rtf1)
-    rtf2_min = min(rtf2)
-    rtf1_max = max(rtf1)
-    rtf2_max = max(rtf2)
+    indicators = ["gpt_gen_time", "gpt_forward_time", "bigvgan_time"]
 
-    print(f"RTF1: mean={rtf1_mean:.2f}, std={rtf1_std:.2f}, min={rtf1_min:.2f}, max={rtf1_max:.2f}")
-    print(f"RTF2: mean={rtf2_mean:.2f}, std={rtf2_std:.2f}, min={rtf2_min:.2f}, max={rtf2_max:.2f}")
+    for indicator in indicators:
+        mean1, std1, min1, max1 = calculate_floats(data1, indicator)
+        mean2, std2, min2, max2 = calculate_floats(data2, indicator)
+        print(f"{indicator} 1: mean={mean1:.2f}, std={std1:.2f}, min={min1:.2f}, max={max1:.2f}")
+        print(f"{indicator} 2: mean={mean2:.2f}, std={std2:.2f}, min={min2:.2f}, max={max2:.2f}")
+        print(f"Difference in {indicator}: {abs(mean1 - mean2):.2f}")
 
-    if rtf1_mean - rtf2_mean > 0.01:
-        print("The second results has a lower mean RTF. ")
-    elif rtf2_mean - rtf1_mean > 0.01:
-        print("The first results has a lower mean RTF.")
-    else:
-        print("The means are almost same.")
 
     # TODO: Compare the two audio files
     audio1 ={ d["audio_prompt"] + '_' + d['text'] : d["output_path"] for d in data1}

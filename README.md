@@ -30,15 +30,16 @@ pip install WeTextProcessing==1.0.3
 4. If you want to evaluate `Custom CUDA kernal for BigVGN`, install `Visual Studio 2022`.
 
 5. Check cuda toolkit
-
-```
+<details><summary> check environment</summary>
+<pre>
 > nvcc -V
 nvcc: NVIDIA (R) Cuda compiler driver
 Copyright (c) 2005-2024 NVIDIA Corporation
 Built on Thu_Mar_28_02:30:10_Pacific_Daylight_Time_2024
 Cuda compilation tools, release 12.4, V12.4.131
 Build cuda_12.4.r12.4/compiler.34097967_0
-
+</pre>
+<pre>
 > nvidia-smi
 Tue Apr 15 22:06:57 2025
 +-----------------------------------------------------------------------------------------+
@@ -52,7 +53,7 @@ Tue Apr 15 22:06:57 2025
 | 26%   30C    P8             14W /  151W |     750MiB /   4096MiB |      2%      Default |
 |                                         |                        |                  N/A |
 +-----------------------------------------+------------------------+----------------------+
-
+</pre><pre>
 > git clone git@github.com:NVIDIA/cuda-samples.git
 > cd cuda-samples
 > nvcc -I.\Common Samples\1_Utilities\deviceQuery\deviceQuery.cpp -O3 -o deviceQuery.exe
@@ -68,7 +69,7 @@ Device 0: "NVIDIA GeForce GTX 970"
 ...
 deviceQuery, CUDA Driver = CUDART, CUDA Driver Version = 12.6, CUDA Runtime Version = 12.4, NumDevs = 1
 Result = PASS
-
+</pre><pre>
 > nvcc -I.\Common Samples\1_Utilities\bandwidthTest\bandwidthTest.cu -O3 -o bandwidthTest.exe
 > bandwidthTest.exe
 
@@ -93,9 +94,8 @@ Running on...
    Transfer Size (Bytes)        Bandwidth(GB/s)
    32000000                     142.2
 
-Result = PASS
-
-```
+Result = PASS</pre>
+</details>
 
 #### On macOS,
 
