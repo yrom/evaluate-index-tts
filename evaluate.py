@@ -302,6 +302,9 @@ def main():
         choices=["short", "long", "extra", "all"],
         help="Type of text to evaluate.",
     )
+    eval.add_argument(
+        "--limit", type=int, default=None, help="Limit the number of test samples to evaluate."
+    )
     args = parser.parse_args()
 
     command = args.command
@@ -318,6 +321,8 @@ def main():
         raise ValueError(f"Test set file {args.test_set} does not exist.")
     test_set = load_dataset(args.test_set)
     test_sets = test_set.as_testset(lang=args.lang, text=args.text_type)
+    if args.limit:
+        test_sets = test_sets[0][: args.limit], test_sets[1][: args.limit]
     if args.device is None:
         if torch.mps.is_available():
             args.device = "mps"
