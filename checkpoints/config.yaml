@@ -26,6 +26,7 @@ gpt:
     start_text_token: 0
     stop_text_token: 1
     train_solo_embeddings: false
+    checkpointing: false
     condition_type: "conformer_perceiver"
     condition_module:
         output_size: 512

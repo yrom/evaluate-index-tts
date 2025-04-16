@@ -201,6 +201,11 @@ def load_audio_mel(audio: AudioPrompt, device):
     del audio
     return cond_mel
 
+def sync():
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+    elif torch.mps.is_available():
+        torch.mps.synchronize()
 
 def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str]], output_dir=None, verbose=False):
     """
@@ -219,16 +224,22 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
     with torch.inference_mode():
         prompts, texts = test_sets
         total_iterations = len(prompts) * len(texts)
+        # warmup
+        t = model.preprocess_text("Hello")
+        audio_prompt = load_audio_mel(prompts[0], model.device)
+        ret, _ = model.infer_e2e(audio_prompt, t)
+        del audio_prompt, ret
         with tqdm(total=total_iterations, desc="Inference Progress") as pbar:
 
             for prompt in prompts:
                 audio_prompt = load_audio_mel(prompt, model.device)
-
+                sync()
                 for text in texts:
                     model.stats = {}
                     normalized_text = model.preprocess_text(text)
                     start_time = time.perf_counter()
                     audio, sr = model.infer_e2e(audio_prompt, normalized_text, verbose=verbose)
+                    sync()
                     end_time = time.perf_counter()
                     infer_duration = end_time - start_time
                     audio_length = audio.shape[1] / sr
@@ -236,7 +247,7 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
                     # Generate audio
                     if output_dir:
                         output_path = os.path.join(output_dir, f"spk_{int(end_time)}.wav")
-                        torchaudio.save(output_path, audio.cpu(), sr)
+                        torchaudio.save(output_path, audio.cpu().detach(), sr)
                     else:
                         output_path = None
                     # Save results
@@ -251,6 +262,7 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
                         }
                     )
                     pbar.update(1)
+                del audio_prompt
 
     # Save results to csv
     report = os.path.join(
@@ -266,7 +278,7 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
         cvs_writer = writer(f)
         cvs_writer.writerow(csv_header)
         for result in results:
-            cvs_writer.writerow([result[key][:10] if isinstance(result[key], str) else result[key] for key in csv_header])
+            cvs_writer.writerow([result[key][:30] if key == 'text' else result[key] for key in csv_header])
     print(f"Evaluation results saved to {report}")
 
 
