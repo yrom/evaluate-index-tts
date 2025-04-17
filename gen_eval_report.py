@@ -27,7 +27,7 @@ def plot_waveform(waveform: np.ndarray, sample_rate: int, fig_save_path=None, sh
     num_channels, num_frames = waveform.shape
     time_axis = torch.arange(0, num_frames) / sample_rate
 
-    figure, axes = plt.subplots(num_channels * 2, 1, figsize=(6, 3 * num_channels))
+    figure, axes = plt.subplots(num_channels * 2, 1, figsize=(5, 2 * num_channels))
     wav_axes = axes[:num_channels]
     wavspec_axes = axes[num_channels : ]
     # spec_axes = axes[num_channels * 2 :]
@@ -37,7 +37,7 @@ def plot_waveform(waveform: np.ndarray, sample_rate: int, fig_save_path=None, sh
         wav_axes[c].set_xlim([0, time_axis[-1]])
         wav_axes[c].grid(True)
 
-        cax = wavspec_axes[c].specgram(waveform[c], Fs=sample_rate)
+        cax = wavspec_axes[c].specgram(waveform[c]+1e-10, Fs=sample_rate)
         # figure.colorbar(cax[-1], ax=wavspec_axes[c])
         # im = spec_axes[c].imshow(librosa.power_to_db(specgram[c]), origin="lower", aspect="auto")
         # figure.colorbar(im, ax=spec_axes[c], format="%+2.0f dB")
@@ -57,7 +57,7 @@ def plot_waveform(waveform: np.ndarray, sample_rate: int, fig_save_path=None, sh
     plt.close(figure)
 
 
-def generate_html_report(result_dict, merge_key, baseline_name, files):
+def generate_html_report(result_dict, summary, merge_key, baseline_name, files):
     from jinja2 import Template
     # Define the HTML template
     template = Template("""
@@ -71,14 +71,19 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
             table {
                 border-collapse: collapse;
                 width: 100%;
+                
             }
             th, td {
                 border: 1px solid black;
                 padding: 8px;
                 text-align: center;
+                
             }
             th {
                 background-color: #f2f2f2;
+            }
+            audio {
+                width: 150px;
             }
         </style>
     </head>
@@ -98,7 +103,7 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
         </details>
         </header>
         <h2>Baseline and Results</h2>
-        <p>Testset: https://github.com/yrom/evaluate-index-tts/blob/main/testset.json </p>
+        <p>Testset: <a href="https://github.com/yrom/evaluate-index-tts/blob/main/testset.json">https://github.com/yrom/evaluate-index-tts/blob/main/testset.json</a> </p>
         <ul>
             <li>Baseline:  <a href="outputs/{{baseline_name}}.csv" >{{ baseline_name }}</a></li>
             {% for  file in files %}
@@ -125,24 +130,42 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
                 </tr>
             </thead>
             <tbody>
+                <tr style="background-color: azure;">
+                    <td> Average </td>
+                    <td> - </td>
+                    {% for key in merge_key %}
+                        {% if key == "output_path" %}
+                            <td>-</td>
+                            {% for file in files %}
+                                <td>-</td>
+                            {% endfor %}
+                        {% else %}
+                        <td> {{ '%.4f' | format(summary['baseline'].get(key, 0.0)) }} </td>
+                        {% for file in files %}
+                            <td> {{ '%.4f' | format( summary.get(file, {}).get(key, 0.0)) }} </td>
+                        {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </tr>
                 {% for k, v in result_dict.items() %}
                     <tr>
                         <td>{{ k[0] }}</td>
                         <td>{{ k[1] }}</td>
                         {% for key in merge_key %}
                             {% if key == "output_path" %}
-                                <td><audio controls><source src="{{ v['baseline'].get(key, '') }}" type="audio/wav" /></audio>
+                                <td><audio controls preload="none"><source src="{{ v['baseline'].get(key, '') }}" type="audio/wav" /></audio>
                                 <img src="{{ v['baseline'].get(key, '').replace('.wav', '.png') }}" alt="Waveform" width="200" />
                                 </td>
                                 {% for file in files %}
-                                    <td><audio controls><source src="{{ v.get(file, {}).get(key, '') }}" type="audio/wav" /></audio>
+                                    <td><audio controls preload="none"><source src="{{ v.get(file, {}).get(key, '') }}" type="audio/wav" /></audio>
                                     <img src="{{ v[file].get(key, '').replace('.wav', '.png') }}" alt="Waveform" width="200" />
                                     </td>
                                 {% endfor %}
                             {% else %}
-                                <td>{{ v['baseline'].get(key, '')[:6] }}</td>
+                            
+                                <td>{{ '%.4f' | format( v['baseline'].get(key, 0.0) | float ) }}</td>
                                 {% for file in files %}
-                                    <td>{{ v.get(file, {}).get(key, '')[:6] }}</td>
+                                    <td>{{ '%.4f' | format( v.get(file, {}).get(key, 0.0) | float ) }}</td>
                                 {% endfor %}
                             {% endif %}
                         {% endfor %}
@@ -179,9 +202,14 @@ def generate_html_report(result_dict, merge_key, baseline_name, files):
             ]
         )
 
+    return template.render(result_dict=result_dict, summary=summary, merge_key=merge_key, baseline_name=baseline_name, files=files, device_info=device_info)
 
-
-    return template.render(result_dict=result_dict, merge_key=merge_key, baseline_name=baseline_name, files=files, device_info=device_info)
+def plot_waveform_wrapper(params):
+    audio_path, savepath = params
+    waveform, sample_rate = torchaudio.load(audio_path)
+    print(f"Plotting waveform for {audio_path} to {savepath}")
+    plot_waveform(waveform, sample_rate, fig_save_path=savepath, show=False)
+    del waveform
 
 def main(baseline_csv: str, files: list[str]):
     baseline = read_csv(baseline_csv)
@@ -208,11 +236,34 @@ def main(baseline_csv: str, files: list[str]):
             result_dict[result_key].update({filename: {k: d[k] for k in merge_key}})
 
 
+    # summary for the indicators:  "gpt_gen_time", "gpt_forward_time", "bigvgan_time", "rtf"
+    indicators = ["gpt_gen_time", "gpt_forward_time", "bigvgan_time", "rtf"]
+    summary = {}
+    for k, v in result_dict.items():
+        for filename in ["baseline", *filenames]:
+            if filename not in v:
+                print(f"Missing {filename} in {v} for {k}")
+                continue
+            vv = v[filename]
+            values = {}
+            for indicator in indicators:
+                if indicator not in vv:
+                    print(f"Missing {indicator} in {filename} for {k}")
+                    continue
+                vv[indicator] = float(vv[indicator])
+                if indicator not in values:
+                    values[indicator] = []
+                values[indicator].append(vv[indicator])
 
-    # for k, v in result_dict.items():
-        # print(f"{k}: {v}")
+            summary[filename] = {
+                indicator: np.mean(value) for indicator, value in values.items()
+            }
+    print(summary)
+    # result_dict[("Summary", "")] = summary
+
+
     # plot waveforms
-    output_waveforms = []
+    plot_params = []
     for k, v in result_dict.items():
         for filename in ["baseline", *filenames]:
             if filename not in v:
@@ -225,18 +276,26 @@ def main(baseline_csv: str, files: list[str]):
                 continue
             savepath = os.path.splitext(audio_path)[0] + ".png"
             if os.path.exists(savepath):
-                # print(f"File exists: {savepath}")
+                #print(f"File already exists: {savepath}")
                 continue
-            waveform, sample_rate = torchaudio.load(audio_path)
-            plot_waveform(waveform, sample_rate, fig_save_path=savepath, show=False)
-            output_waveforms.append(savepath)
-            del waveform
+            plot_params.append((audio_path, savepath))
+            
+    # plot waveform in subprocess
+    if len(plot_params) > 10:
+        import multiprocessing
+        with multiprocessing.Pool(processes=4) as pool:
+            pool.map(plot_waveform_wrapper, plot_params)
+    else:
+        for params in plot_params:
+            plot_waveform_wrapper(params)
+
     # write html report
-    html_report = generate_html_report(result_dict, merge_key, baseline_name, filenames)
-    
-    report_name = '_vs_'.join(filenames) + ".html"
+    html_report = generate_html_report(result_dict,summary, merge_key, baseline_name, filenames)
+    import time
+    report_name = f"indextts_evaluate_report_{time.strftime('%Y%m%d_%H%M%S')}.html"
     with open(report_name, "w", encoding="utf-8") as f:
         f.write(html_report)
+    print(f"Report saved to {os.path.abspath(report_name)}")
 
 
 if __name__ == "__main__":

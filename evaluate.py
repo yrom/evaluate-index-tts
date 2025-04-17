@@ -263,23 +263,8 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
                     )
                     pbar.update(1)
                 del audio_prompt
-
-    # Save results to csv
-    report = os.path.join(
-        output_dir,
-        "eval_{}_{}results_{}.csv".format(
-            model.device, "fp16_" if model.is_fp16 else "", time.strftime("%Y%m%d-%H%M%S")
-        ),
-    )
-    csv_header = results[0].keys()
-    from csv import writer
-
-    with open(report, "w", encoding="utf-8") as f:
-        cvs_writer = writer(f)
-        cvs_writer.writerow(csv_header)
-        for result in results:
-            cvs_writer.writerow([result[key][:30] if key == 'text' else result[key] for key in csv_header])
-    print(f"Evaluation results saved to {report}")
+    return results
+    
 
 
 def main():
@@ -352,7 +337,23 @@ def main():
     )
 
     # Evaluate model
-    evaluate_model(model, test_sets, output_dir=args.output_dir, verbose=args.verbose)
+    results = evaluate_model(model, test_sets, output_dir=args.output_dir, verbose=args.verbose)
+    # Save results to csv
+    report = os.path.join(
+        args.output_dir,
+        "eval_{}_{}_{}{}results_{}.csv".format(
+            model.device, f"testset_{args.lang}_{args.text_type}", "bigvgan_cuda_kernel_" if model.use_cuda_kernel else "", "fp16_" if model.is_fp16 else "", time.strftime("%Y%m%d-%H%M%S")
+        ),
+    )
+    csv_header = results[0].keys()
+    from csv import writer
+
+    with open(report, "w", encoding="utf-8") as f:
+        cvs_writer = writer(f)
+        cvs_writer.writerow(csv_header)
+        for result in results:
+            cvs_writer.writerow([result[key][:30] if key == 'text' else result[key] for key in csv_header])
+    print(f"Evaluation results saved to {report}")
 
 
 if __name__ == "__main__":
