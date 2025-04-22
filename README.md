@@ -167,6 +167,12 @@ python evaluate.py eval --enable_cuda_kernel --device cuda ...
 python compare.py baseline.csv outputs/xxx.csv
 ```
 
+6. Generate the evaluation report:
+
+```bash
+python gen_eval_report.py baseline.csv outputs/xxx.csv outputs/yyy.csv
+```
+
 ## Evaluation Results Sample
 
 
