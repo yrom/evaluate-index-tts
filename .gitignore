@@ -1,2 +1,4 @@
 /outputs
 /prompts/**/*.wav
+__pycache__
+*.py[cod]

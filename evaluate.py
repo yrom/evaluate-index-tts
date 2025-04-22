@@ -4,208 +4,44 @@
 Evaluate the model on the test set.
 """
 
-import json
+from functools import lru_cache
 import os
+import sys
 import time
+from typing import List
 import warnings
-from dataclasses import dataclass
-from typing import List, Literal
+
 import numpy as np
 import torch
 import torchaudio
 
-from tqdm import tqdm
-
+from utils.tqdm import tqdm
+from utils.dataset import (
+    AudioPrompt,
+    DataSets,
+    download_audio,
+    extract_audio_melspec_and_save,
+    load_audio_mel,
+    load_dataset,
+)
 # Suppress warnings from tensorflow and other libraries
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 from indextts.infer import IndexTTS
-from indextts.utils.feature_extractors import MelSpectrogramFeatures
 
 
-@dataclass
-class AudioPrompt:
-    name: str
-    url: str
-    lang: Literal["zh", "en"]
-
-    @classmethod
-    def from_dict(cls, data):
-        return cls(
-            name=data["name"],
-            url=data["url"],
-            lang=data["lang"],
-        )
-
-
-@dataclass
-class TestCase:
-    audio_prompt: AudioPrompt
-    text: str
-
-
-@dataclass
-class Text:
-    text: str
-    lang: Literal["zh", "en"]
-
-
-@dataclass
-class DataSets:
-    audio_prompts: List[AudioPrompt]
-    short_texts: List[Text]
-    long_texts: List[Text]
-    extra_texts: List[Text]
-
-    @classmethod
-    def from_dict(cls, data):
-        audio_prompts = [AudioPrompt.from_dict(d) for d in data.get("audio_prompts", [])]
-        zh_texts = data.get("zh")
-        en_texts = data.get("en")
-        short_texts = [Text(text=t, lang="zh") for t in zh_texts.get("short_texts", [])] + [
-            Text(text=t, lang="en") for t in en_texts.get("short_texts", [])
-        ]
-        long_texts = [Text(text=t, lang="zh") for t in zh_texts.get("long_texts", [])] + [
-            Text(text=t, lang="en") for t in en_texts.get("long_texts", [])
-        ]
-        extra_texts = [Text(text=t, lang="zh") for t in zh_texts.get("extra_texts", [])] + [
-            Text(text=t, lang="en") for t in en_texts.get("extra_texts", [])
-        ]
-        return cls(
-            audio_prompts=audio_prompts,
-            short_texts=short_texts,
-            long_texts=long_texts,
-            extra_texts=extra_texts,
-        )
-
-    def as_testset(
-        self,
-        lang: Literal["zh", "en", "all"],
-        text: Literal["short", "long", "extra", "all"],
-    ) -> tuple[List[AudioPrompt], List[str]]:
-        """
-        Generate test cases based on the specified language and text type.
-
-        Args
-            lang (str): Language of the audio prompt. Can be 'zh', 'en', or 'all'.
-            text (str): Type of text. Can be 'short', 'long', 'extra', or 'all'.
-
-        Returns
-            List[TestCase]: List of test cases.
-        """
-        if lang == "all":
-            audio_prompts = self.audio_prompts
-        else:
-            audio_prompts = [ap for ap in self.audio_prompts if ap.lang == lang]
-
-        if text == "short":
-            texts = [t.text for t in self.short_texts if t.lang == lang or t.lang == "all"]
-        elif text == "long":
-            texts = [t.text for t in self.long_texts if t.lang == lang or t.lang == "all"]
-        elif text == "extra":
-            texts = [t.text for t in self.extra_texts if t.lang == lang or t.lang == "all"]
-        else:
-            texts = [
-                t.text
-                for t in self.short_texts + self.long_texts + self.extra_texts
-                if t.lang == lang or t.lang == "all"
-            ]
-
-        return (
-            audio_prompts,
-            texts,
-        )
-
-
-def load_dataset(test_set_json_path: str) -> DataSets:
-    """
-    Load the test set from a JSON file.
-
-    Args
-        test_set_json_path (str): Path to the JSON file containing test samples.
-
-    Returns
-       DataSets: A DataSets object containing the test samples.
-    """
-    with open(test_set_json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    return DataSets.from_dict(data)
-
-
-def prepare_prompts(test_set: DataSets):
+def prepare_prompts(test_set: DataSets, save_wav=False):
     os.makedirs("prompts", exist_ok=True)
 
-    for test_case in tqdm(test_set.audio_prompts):
+    for test_case in tqdm(test_set.audio_prompts, desc="Prepare audio prompts", file=sys.stdout):
+        audio_path = os.path.join("prompts", test_case.lang, test_case.name + ".wav")
         audio_mel_path = os.path.join("prompts", test_case.lang, test_case.name + ".npy")
-        if os.path.exists(audio_mel_path):
-            print(f"Audio mel '{test_case.name}.npy' already exists, skipping.")
-            continue
-        audio = load_audio_mel(test_case, device="cpu")
-        del audio
+        if save_wav and not os.path.exists(audio_path):
+            download_audio(test_case, audio_path)
+        if not os.path.exists(audio_mel_path):
+            extract_audio_melspec_and_save(audio_path, audio_mel_path)
 
-
-def load_audio_mel(audio: AudioPrompt, device):
-    audio_mel_path = os.path.join("prompts", audio.lang, audio.name + ".npy")
-    if os.path.exists(audio_mel_path):
-        try:
-            # print(f"Load from {audio_mel_path}")
-            cond_mel = np.load(audio_mel_path)
-            cond_mel = torch.from_numpy(cond_mel)
-            if device and cond_mel.device != device:
-                cond_mel = cond_mel.to(device)
-            return cond_mel
-        except Exception as e:
-            print(f"Failed to load prebuilt {audio_mel_path}")
-            print("Removing the corrupted file.")
-            os.remove(audio_mel_path)
-    audio_path = os.path.join("prompts", audio.lang, audio.name + ".wav")
-    if not os.path.exists(audio_path):
-        try:
-            from urllib.request import urlretrieve
-            os.makedirs(os.path.dirname(audio_path), exist_ok=True)
-            urlretrieve(audio.url, audio_path)
-            # print(f"Download '{audio.name}' from {audio.url}")
-        except Exception as e:
-            import requests
-            response = requests.get(audio.url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"}, stream=True)
-            if response.status_code == 200:
-                with open(audio_path, "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-            else:
-                raise ValueError(f"Failed to download {audio.url}: {response.status_code}")
-
-    # print(f"Load from {audio_path}")
-    audio, sr = torchaudio.load(audio_path)
-    audio = torch.mean(audio, dim=0, keepdim=True)
-    if device:
-        audio = audio.to(device)
-    if audio.shape[0] > 1:
-        audio = audio[0].unsqueeze(0)
-    if sr != 24000:
-        resample = torchaudio.transforms.Resample(sr, 24000)
-        if device:
-            resample = resample.to(device)
-        audio = resample(audio)
-        print(f">> Audio resample from {sr} to 24000")
-    mel_spec = MelSpectrogramFeatures()
-    if device:
-        mel_spec = mel_spec.to(device)
-    cond_mel: torch.Tensor = mel_spec(audio)
-    if device and cond_mel.device != device:
-        cond_mel = cond_mel.to(device)
-    np.save(audio_mel_path, cond_mel.cpu().numpy().astype(np.float32))
-    print(f"cond_mel shape: {cond_mel.shape}", "dtype:", cond_mel.dtype)
-    del audio
-    return cond_mel
-
-def sync():
-    if torch.cuda.is_available():
-        torch.cuda.synchronize()
-    elif torch.mps.is_available():
-        torch.mps.synchronize()
 
 def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str]], output_dir=None, verbose=False):
     """
@@ -220,51 +56,52 @@ def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
     os.makedirs("prompts", exist_ok=True)
-    results = []
+
+    prompts, texts = test_sets
+    total_iterations = len(prompts) * len(texts)
     with torch.inference_mode():
-        prompts, texts = test_sets
-        total_iterations = len(prompts) * len(texts)
+
+        @lru_cache(maxsize=2)
+        def _get_audio_mel(prompt: AudioPrompt):
+            return load_audio_mel(prompt).to(model.device)
+
+        # flatten the test cases
+        test_cases = [(prompt, text) for prompt in prompts for text in texts]
+        assert len(test_cases) == total_iterations
+
         # warmup
-        t = model.preprocess_text("Hello")
-        audio_prompt = load_audio_mel(prompts[0], model.device)
+        t = "Ready to go"
+        audio_prompt = _get_audio_mel(prompts[0])
         ret, _ = model.infer_e2e(audio_prompt, t)
-        del audio_prompt, ret
-        with tqdm(total=total_iterations, desc="Inference Progress") as pbar:
+        assert ret.shape[0] == 1 and ret.shape[1] > 0
+        del ret
+        for prompt, text in tqdm(test_cases, desc="Inference Progress"):
+            audio_prompt = _get_audio_mel(prompt)
+            model.stats = {}
+            normalized_text = model.preprocess_text(text)
+            start_time = time.perf_counter()
+            audio, sr = model.infer_e2e(audio_prompt, normalized_text, verbose=verbose)
+            audio = audio.cpu()
+            end_time = time.perf_counter()
+            infer_duration = end_time - start_time
+            audio_length = audio.shape[1] / sr
 
-            for prompt in prompts:
-                audio_prompt = load_audio_mel(prompt, model.device)
-                sync()
-                for text in texts:
-                    model.stats = {}
-                    normalized_text = model.preprocess_text(text)
-                    start_time = time.perf_counter()
-                    audio, sr = model.infer_e2e(audio_prompt, normalized_text, verbose=verbose)
-                    sync()
-                    end_time = time.perf_counter()
-                    infer_duration = end_time - start_time
-                    audio_length = audio.shape[1] / sr
-
-                    # Generate audio
-                    if output_dir:
-                        output_path = os.path.join(output_dir, f"spk_{int(end_time)}.wav")
-                        torchaudio.save(output_path, audio.cpu().detach(), sr)
-                    else:
-                        output_path = None
-                    # Save results
-                    results.append(
-                        {
-                            "audio_prompt": prompt.name,
-                            "text": text,
-                            "output_path": output_path,
-                            "audio_length": audio_length,
-                            "rtf": infer_duration / audio_length,
-                            **model.get_stats(),
-                        }
-                    )
-                    pbar.update(1)
-                del audio_prompt
-    return results
-    
+            # Generate audio
+            if output_dir:
+                output_path = os.path.join(output_dir, f"spk_{int(end_time)}.wav")
+                torchaudio.save(output_path, audio, sr)
+            else:
+                output_path = None
+            del audio
+            # Save results
+            yield {
+                "audio_prompt": prompt.name,
+                "text": text,
+                "output_path": output_path,
+                "audio_length": audio_length,
+                "rtf": infer_duration / audio_length,
+                **model.get_stats(),
+            }
 
 
 def main():
@@ -274,12 +111,13 @@ def main():
 
     subparser = parser.add_subparsers(dest="command", required=True)
     prepare = subparser.add_parser("prepare", help="Prepare the test set.")
-    prepare.add_argument("test_set", type=str, help="Path to the test set JSON file.")
+    prepare.add_argument("--test_set", type=str, default="testset.json", help="Path to the test set JSON file.")
+    prepare.add_argument("--save_wav", action="store_true", default=True, help="Save the original audio files.")
     eval = subparser.add_parser("eval", help="Evaluate the model on the test set.")
 
     eval.add_argument("--model_dir", type=str, required=True, help="Path to the indextts model checkpoints directory.")
     eval.add_argument("--cfg_path", type=str, required=True, help="Path to the indextts model config file.")
-    eval.add_argument("--test_set", type=str, required=True, help="Path to the test set JSON file.")
+    eval.add_argument("--test_set", type=str, default="testset.json", help="Path to the test set JSON file.")
     eval.add_argument("--output_dir", type=str, default=None, help="Directory to save the evaluation results.")
     eval.add_argument(
         "--device", type=str, default=None, help="Device to run the model on (e.g., 'cpu', 'cuda', 'mps')."
@@ -299,9 +137,7 @@ def main():
         choices=["short", "long", "extra", "all"],
         help="Type of text to evaluate.",
     )
-    eval.add_argument(
-        "--limit", type=int, default=None, help="Limit the number of test samples to evaluate."
-    )
+    eval.add_argument("--limit", type=int, default=None, help="Limit the number of test samples to evaluate.")
     args = parser.parse_args()
 
     command = args.command
@@ -310,7 +146,7 @@ def main():
         raise ValueError(f"Test set file {args.test_set} does not exist.")
     test_set = load_dataset(args.test_set)
     if command == "prepare":
-        prepare_prompts(test_set)
+        prepare_prompts(test_set, args.save_wav)
         return
     if not command or command != "eval":
         raise ValueError(f"Unknown command: {command}")
@@ -336,23 +172,29 @@ def main():
         use_cuda_kernel=args.enable_cuda_kernel,
     )
 
-    # Evaluate model
-    results = evaluate_model(model, test_sets, output_dir=args.output_dir, verbose=args.verbose)
     # Save results to csv
     report = os.path.join(
         args.output_dir,
         "eval_{}_{}_{}{}results_{}.csv".format(
-            model.device, f"testset_{args.lang}_{args.text_type}", "bigvgan_cuda_kernel_" if model.use_cuda_kernel else "", "fp16_" if model.is_fp16 else "", time.strftime("%Y%m%d-%H%M%S")
+            model.device,
+            f"testset_{args.lang}_{args.text_type}",
+            "bigvgan_cuda_kernel_" if model.use_cuda_kernel else "",
+            "fp16_" if model.is_fp16 else "",
+            time.strftime("%Y%m%d-%H%M%S"),
         ),
     )
-    csv_header = results[0].keys()
+    # Evaluate model
     from csv import writer
-
+    csv_header = None
     with open(report, "w", encoding="utf-8") as f:
         cvs_writer = writer(f)
-        cvs_writer.writerow(csv_header)
-        for result in results:
-            cvs_writer.writerow([result[key][:30] if key == 'text' else result[key] for key in csv_header])
+        for result in evaluate_model(model, test_sets, output_dir=args.output_dir, verbose=args.verbose):
+            if csv_header is None:
+                csv_header = result.keys()
+                cvs_writer.writerow(csv_header)
+            # Write results to CSV
+            cvs_writer.writerow([result[key] for key in csv_header])
+
     print(f"Evaluation results saved to {report}")
 
 
