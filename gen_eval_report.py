@@ -102,7 +102,7 @@ TEMPLATE_FOR_SINGLE_RESULT = """
 </body>
 </html>
 """
-TEMPLATE_FOR_MULTI_RESULT = Template("""
+TEMPLATE_FOR_MULTI_RESULT = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -218,7 +218,7 @@ TEMPLATE_FOR_MULTI_RESULT = Template("""
 
 </body>
 </html>
-""")
+"""
 
 
 def read_csv(file_path) -> list[dict]:
