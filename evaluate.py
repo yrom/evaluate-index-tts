@@ -161,12 +161,23 @@ def main():
     if args.limit:
         test_sets = test_sets[0][: args.limit], test_sets[1][: args.limit]
     if args.device is None:
-        if torch.mps.is_available():
+        # Check if MPS is available (for MacOS)
+        import platform
+        if platform.system() == "Darwin" and hasattr(torch, "mps") and torch.mps.is_available():
             args.device = "mps"
         elif torch.cuda.is_available():
             args.device = "cuda:0"
+            device_prop = torch.cuda.get_device_properties(args.device)
+            print("CUDA device properties:", 
+                  f"Name: {device_prop.name}, "
+                  f"Total Memory: {device_prop.total_memory / (1024 ** 3):.2f} GB, "
+                  f"Compute Capability: {device_prop.major}.{device_prop.minor}")
         else:
             args.device = "cpu"
+            warnings.warn(
+                "No GPU available. Running on CPU may be slow.",
+                RuntimeWarning,
+            )
     # Load model
     model = IndexTTS(
         cfg_path=args.cfg_path,
