@@ -160,7 +160,7 @@ def main():
         if torch.mps.is_available():
             args.device = "mps"
         elif torch.cuda.is_available():
-            args.device = "cuda"
+            args.device = "cuda:0"
         else:
             args.device = "cpu"
     # Load model
