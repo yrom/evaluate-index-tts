@@ -77,16 +77,42 @@ main() {
     python evaluate.py prepare
     echo "Evaluating baseline result"
 
-    python evaluate.py eval --model_dir $model_dir --cfg_path checkpoints/config.yaml \
+    base_args="--model_dir $model_dir --cfg_path checkpoints/config.yaml \
         --lang zh --text-type all --test_set testset.json --no-fp16 \
-        --output_dir $outputs_dir
+        --output_dir $outputs_dir"
+
+    python evaluate.py eval $base_args
     
     update_cuda_visible_devices
     echo "Evaluating fp16 result"
-    python evaluate.py eval --model_dir $model_dir --cfg_path checkpoints/config.yaml \
-        --lang zh --text-type all --test_set testset.json --fp16 \
-        --output_dir $outputs_dir
+    python evaluate.py eval $base_args --fp16
 
+    # check nvcc and ninja if available
+    if command -v nvcc &> /dev/null && nvcc -V; then
+        echo "nvcc is available, compiling custom cuda extension"
+        if python -c "from indextts.BigVGAN.alias_free_activation.cuda import load; print(load.load())"; then
+            echo "Custom cuda extension compiled"
+            echo "Evaluating custom cuda extension"
+            python evaluate.py eval $base_args --enable_cuda_kernel
+        else
+            echo "Failed to compile custom cuda extension, skip evaluation."
+        fi
+    
+    else
+        echo "nvcc is not available, skip custom cuda extension evaluation."
+    fi
+
+    # check deepspeed if installed
+    if python -m deepspeed.env_report; then
+        echo "Evaluating deepspeed result"
+        python evaluate.py eval --model_dir $model_dir --cfg_path checkpoints/config.yaml \
+            --lang zh --text-type all --test_set testset.json --fp16 --enable_deepspeed \
+            --output_dir $outputs_dir 
+    else
+        echo "deepspeed not installed, skip deepspeed evaluation."
+    fi
+    reports=(`ls $outputs_dir/*.csv`)
+    python gen_eval_report.py ${reports[@]}
 }
 
 

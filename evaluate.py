@@ -130,6 +130,7 @@ def main():
     eval.add_argument("--fp16", action="store_true", help="Use fp16 for inference.")
     eval.add_argument("--no-fp16", action="store_false", dest="fp16", help="Disable fp16 for inference.")
     eval.add_argument("--verbose", action="store_true", help="Enable verbose mode.")
+    eval.add_argument("--eanble_deepspeed", action="store_true", help="Enable DeepSpeed for inference.")
 
     eval.add_argument(
         "--lang", type=str, default="zh", choices=["zh", "en", "all"], help="Language of the audio prompt."
@@ -185,13 +186,14 @@ def main():
         is_fp16=args.fp16,
         device=args.device,
         use_cuda_kernel=args.enable_cuda_kernel,
+        eanble_deepspeed=args.eanble_deepspeed,
     )
 
     # Save results to csv
     report = os.path.join(
         args.output_dir,
         "eval_{}_{}_{}{}results_{}.csv".format(
-            model.device,
+            model.device.replace(":", "_"),
             f"testset_{args.lang}_{args.text_type}",
             "bigvgan_cuda_kernel_" if model.use_cuda_kernel else "",
             "fp16_" if model.is_fp16 else "",
