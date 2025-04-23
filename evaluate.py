@@ -38,7 +38,11 @@ def prepare_prompts(test_set: DataSets, save_wav=False):
         audio_path = os.path.join("prompts", test_case.lang, test_case.name + ".wav")
         audio_mel_path = os.path.join("prompts", test_case.lang, test_case.name + ".npy")
         if save_wav and not os.path.exists(audio_path):
-            download_audio(test_case, audio_path)
+            try:
+                download_audio(test_case, audio_path)
+            except Exception as e:
+                warnings.warn(f"Failed to download {test_case.name}: {e}", RuntimeWarning)
+                continue
         if not os.path.exists(audio_mel_path):
             extract_audio_melspec_and_save(audio_path, audio_mel_path)
 
