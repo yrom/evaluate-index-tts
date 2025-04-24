@@ -7,6 +7,13 @@ export TORIO_USE_FFMPEG_VERSION=6
 export DYLD_LIBRARY_PATH=/opt/homebrew/opt/ffmpeg@6/lib
 export PATH=/opt/homebrew/opt/ffmpeg@6/bin:$PATH
 ```
+
+Or install from conda:
+
+```
+conda install ffmpeg=6 -c conda-forge
+export TORIO_USE_FFMPEG_VERSION=6
+```
 """
 
 import sys
@@ -120,6 +127,11 @@ def main():
     if not os.path.exists(args.voice):
         print(f"Audio prompt file {args.voice} does not exist.")
         parser.print_help()
+        print(
+            "python gen_audiobook.py --model_dir /path/to/index-tts/checkpoints"
+            " --limit 3 tests/texts.txt -v prompts/zh/Male-5.npy --output_dir outputs"
+            " --config checkpoints/config.yaml --device cuda"
+        )
         sys.exit(1)
     trace_dir = os.path.join(args.output_dir, "trace")
     if not os.path.isdir(trace_dir):
@@ -163,6 +175,10 @@ def main():
                 print("export TORIO_USE_FFMPEG_VERSION=6")
                 print("export DYLD_LIBRARY_PATH=/opt/homebrew/opt/ffmpeg@6/lib")
                 print("export PATH=/opt/homebrew/opt/ffmpeg@6/bin:$PATH")
+            else:
+                print("Please install ffmpeg 6 or 5, e.g:")
+                print("conda install ffmpeg=6 -c conda-forge")
+                print("export TORIO_USE_FFMPEG_VERSION=6")
             raise
         voice_mel = np.load(args.voice)
         voice_mel = torch.from_numpy(voice_mel).to(tts.device)

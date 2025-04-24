@@ -4,11 +4,10 @@ import sys
 import os
 from typing import Dict, List
 import numpy as np
-import torch
-import matplotlib.pyplot as plt
 from jinja2 import Template
-import torchaudio
 import time
+
+import psutil
 
 TEMPLATE_FOR_SINGLE_RESULT = """
 <!DOCTYPE html>
@@ -238,38 +237,6 @@ def read_csv(file_path) -> list[dict]:
     return csv_data
 
 
-def plot_waveform(waveform: np.ndarray, sample_rate: int, fig_save_path=None, show=True):
-    num_channels, num_frames = waveform.shape
-    time_axis = torch.arange(0, num_frames) / sample_rate
-
-    figure, axes = plt.subplots(num_channels * 2, 1, figsize=(5, 2 * num_channels))
-    wav_axes = axes[:num_channels]
-    wavspec_axes = axes[num_channels:]
-    # spec_axes = axes[num_channels * 2 :]
-
-    for c in range(num_channels):
-        wav_axes[c].plot(time_axis, waveform[c], linewidth=1)
-        wav_axes[c].set_xlim([0, time_axis[-1]])
-        wav_axes[c].grid(True)
-
-        cax = wavspec_axes[c].specgram(waveform[c] + 1e-10, Fs=sample_rate)
-        # figure.colorbar(cax[-1], ax=wavspec_axes[c])
-        # im = spec_axes[c].imshow(librosa.power_to_db(specgram[c]), origin="lower", aspect="auto")
-        # figure.colorbar(im, ax=spec_axes[c], format="%+2.0f dB")
-        # if num_channels > 1:
-        #     wav_axes[c].set_ylabel(f"#{c + 1}")
-        #     wavspec_axes[c].set_ylabel(f"#{c + 1}")
-        #     spec_axes[c].set_ylabel(f"#{c + 1}")
-        # if c == 0:
-        #     wav_axes[c].set_title("Original Waveform")
-        #     wavspec_axes[c].set_title("Original Spectrogram")
-        #     spec_axes[c].set_title("Featured Spectrogram")
-    figure.tight_layout()
-    if fig_save_path:
-        figure.savefig(fig_save_path)
-    if show:
-        plt.show(block=False)
-    plt.close(figure)
 
 
 def list_device_info():
@@ -329,6 +296,8 @@ def generate_html_report(result_dict, summary, merge_key, baseline_name, files):
 
 def plot_waveform_wrapper(params):
     audio_path, savepath = params
+    import torchaudio
+    from utils.plot import plot_waveform
     waveform, sample_rate = torchaudio.load(audio_path)
     print(f"Plotting waveform for {audio_path} to {savepath}")
     plot_waveform(waveform, sample_rate, fig_save_path=savepath, show=False)
@@ -377,7 +346,8 @@ def report_for_single_result(result_csv: str):
     if len(plot_params) > 10:
         import multiprocessing
 
-        with multiprocessing.Pool(processes=4) as pool:
+        num_processes = min(max(4, len(plot_params) // 4), psutil.cpu_count(logical=True))
+        with multiprocessing.Pool(processes=num_processes) as pool:
             pool.map(plot_waveform_wrapper, plot_params)
     else:
         for params in plot_params:
@@ -460,11 +430,12 @@ def report_for_multi_results(baseline_csv: str, files: List[str]):
     # plot waveform in subprocess
     if len(plot_params) > 10:
         import multiprocessing
-
-        with multiprocessing.Pool(processes=4) as pool:
+        num_processes = min(max(4, len(plot_params) // 4), psutil.cpu_count(logical=True))
+        with multiprocessing.Pool(processes=num_processes) as pool:
             pool.map(plot_waveform_wrapper, plot_params)
     else:
-        for params in plot_params:
+        from utils.tqdm import tqdm
+        for params in tqdm(plot_params):
             plot_waveform_wrapper(params)
 
     # write html report
