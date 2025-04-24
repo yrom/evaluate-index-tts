@@ -1,5 +1,5 @@
 """
-For macOS, please install ffmpeg 6.0 before running this script. 
+For macOS, please install ffmpeg 6.0 before running this script.
 You can do this by running the following commands:
 ```
 brew install ffmpeg@6
@@ -8,16 +8,18 @@ export DYLD_LIBRARY_PATH=/opt/homebrew/opt/ffmpeg@6/lib
 export PATH=/opt/homebrew/opt/ffmpeg@6/bin:$PATH
 ```
 """
+
 import sys
-import torch
+
 import argparse
 import os
 import time
 import numpy as np
-from torchaudio.io import StreamWriter
+
 from tqdm import tqdm
-from profileit import profileit, ScheduleArgs
+
 import warnings
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 MANUAL_SEED = 22333333
 
@@ -46,13 +48,12 @@ class BooleanOptionalAction(argparse.Action):
             setattr(namespace, self.dest, True)
 
 
-
-
 def main():
     parser = argparse.ArgumentParser(description="IndexTTS profile command line")
     parser.add_argument(
         "testfile",
         type=str,
+        default="tests/texts.txt",
         help="Text file containing the sentences to be synthesized. Each line is a sentence.",
     )
     parser.add_argument(
@@ -90,14 +91,18 @@ def main():
         default=None,
         help="Device to run the model on (cpu, cuda, mps). Default is auto-select based on availability",
     )
-    parser.add_argument("--profile", action=BooleanOptionalAction, default=False, help="Enable profiling")
+    parser.add_argument(
+        "--profile", action=BooleanOptionalAction, default=False, help="Enable profiling. Default is disabled"
+    )
     parser.add_argument("--profile_memory", action=BooleanOptionalAction, help="Profile memory usage")
     parser.add_argument("--profile_with_stack", action=BooleanOptionalAction, help="Profile CPU usage")
 
-    parser.add_argument("--seed", type=int, default=MANUAL_SEED, help="Random seed for reproducibility")
-    parser.add_argument("--offset", type=int, default=0, help="Offset for the sentences to be processed")
     parser.add_argument(
-        "--limit", type=int, default=0, help="Limit the number of sentences to process (0 for no limit)"
+        "--seed", type=int, default=MANUAL_SEED, help="Random seed for reproducibility. Default is " + str(MANUAL_SEED)
+    )
+    parser.add_argument("--offset", type=int, default=0, help="Offset of the sentences in `testfile` to be processed")
+    parser.add_argument(
+        "--limit", type=int, default=0, help="Limit the number of sentences from `testfile` to process (0 for no limit)"
     )
     args = parser.parse_args()
     if os.path.exists(args.testfile):
@@ -109,18 +114,19 @@ def main():
         parser.print_help()
         sys.exit(1)
     if args.offset > 0:
-        lines = lines[args.offset:]
+        lines = lines[args.offset :]
     if args.limit > 0:
         lines = lines[: args.limit]
     if not os.path.exists(args.voice):
         print(f"Audio prompt file {args.voice} does not exist.")
         parser.print_help()
         sys.exit(1)
-    trace_dir = os.path.join(args.output_dir, 'trace')
+    trace_dir = os.path.join(args.output_dir, "trace")
     if not os.path.isdir(trace_dir):
         os.makedirs(trace_dir, exist_ok=True)
 
     from indextts.infer import IndexTTS
+    from profileit import profileit, ScheduleArgs
 
     tts = IndexTTS(cfg_path=args.config, model_dir=args.model_dir, is_fp16=args.fp16, device=args.device)
     sentences = []
@@ -141,14 +147,17 @@ def main():
         ),
         eanble_profile=args.profile,
     ) as (profiled_tts, step_generator):
-        
         output_path = os.path.join(args.output_dir, f"gen_{int(time.time())}.mp3")
         # stream writer
+        import torch
+        from torchaudio.io import StreamWriter
+
         try:
             s = StreamWriter(output_path)
         except Exception as e:
             print("Failed to create StreamWriter")
             import platform
+
             if platform.system() == "Darwin":
                 print("brew install ffmpeg@6")
                 print("export TORIO_USE_FFMPEG_VERSION=6")
@@ -169,11 +178,7 @@ def main():
                 # generated_wav shape: [Channels, Frames]
                 # print(f"Generated wav shape: {generated_wav.shape}")
                 if not s._is_open:
-                    s.add_audio_stream(
-                        sample_rate=sr,
-                        num_channels=generated_wav.shape[0],
-                        format="s16"
-                    )
+                    s.add_audio_stream(sample_rate=sr, num_channels=generated_wav.shape[0], format="s16")
                     s.open()
                 # convert ot [Frames, Channels]
                 # torch.transpose(generated_wav, 0, 1)
@@ -185,9 +190,10 @@ def main():
         if s._is_open:
             s.close()
         print(f"Generated audio saved to {output_path}")
+        print("Sentences:", "-" * 10, *sentences, "-" * 10, sep="\n")
         for k, v in profiled_tts.get_stats().items():
             print(f"{k}: {v:.4f}s")
-        print("RTF: ", f"{infer_time / audio_time :.4f}")
+        print("RTF: ", f"{infer_time / audio_time:.4f}")
 
 
 if __name__ == "__main__":
