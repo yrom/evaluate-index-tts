@@ -79,7 +79,10 @@ def main():
         help="Path to the config file. Default is 'checkpoints/config.yaml'",
     )
     parser.add_argument(
-        "--model_dir", type=str, default="checkpoints", help="Path to the model directory. Default is 'checkpoints'"
+        "--model_dir",
+        type=str,
+        default="checkpoints",
+        help="Path to the model directory. Default is 'checkpoints'",
     )
     parser.add_argument(
         "--output_dir",
@@ -88,7 +91,10 @@ def main():
         help="Directory to save the generated audio files. Default is 'outputs'",
     )
     parser.add_argument(
-        "--fp16", default=False, action=BooleanOptionalAction, help="Use FP16 for inference if available"
+        "--fp16",
+        default=False,
+        action=BooleanOptionalAction,
+        help="Use FP16 for inference if available",
     )
 
     parser.add_argument(
@@ -99,17 +105,35 @@ def main():
         help="Device to run the model on (cpu, cuda, mps). Default is auto-select based on availability",
     )
     parser.add_argument(
-        "--profile", action=BooleanOptionalAction, default=False, help="Enable profiling. Default is disabled"
+        "--profile",
+        action=BooleanOptionalAction,
+        default=False,
+        help="Enable profiling. Default is disabled",
     )
-    parser.add_argument("--profile_memory", action=BooleanOptionalAction, help="Profile memory usage")
-    parser.add_argument("--profile_with_stack", action=BooleanOptionalAction, help="Profile CPU usage")
+    parser.add_argument(
+        "--profile_memory", action=BooleanOptionalAction, help="Profile memory usage"
+    )
+    parser.add_argument(
+        "--profile_with_stack", action=BooleanOptionalAction, help="Profile CPU usage"
+    )
 
     parser.add_argument(
-        "--seed", type=int, default=MANUAL_SEED, help="Random seed for reproducibility. Default is " + str(MANUAL_SEED)
+        "--seed",
+        type=int,
+        default=MANUAL_SEED,
+        help="Random seed for reproducibility. Default is " + str(MANUAL_SEED),
     )
-    parser.add_argument("--offset", type=int, default=0, help="Offset of the sentences in `testfile` to be processed")
     parser.add_argument(
-        "--limit", type=int, default=0, help="Limit the number of sentences from `testfile` to process (0 for no limit)"
+        "--offset",
+        type=int,
+        default=0,
+        help="Offset of the sentences in `testfile` to be processed",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Limit the number of sentences from `testfile` to process (0 for no limit)",
     )
     args = parser.parse_args()
     if os.path.exists(args.testfile):
@@ -140,7 +164,12 @@ def main():
     from indextts.infer import IndexTTS
     from profileit import profileit, ScheduleArgs
 
-    tts = IndexTTS(cfg_path=args.config, model_dir=args.model_dir, is_fp16=args.fp16, device=args.device)
+    tts = IndexTTS(
+        cfg_path=args.config,
+        model_dir=args.model_dir,
+        is_fp16=args.fp16,
+        device=args.device,
+    )
     sentences = []
     for text in tqdm(lines, desc="PreProcessing Text"):
         text = tts.preprocess_text(text)
@@ -166,7 +195,7 @@ def main():
 
         try:
             s = StreamWriter(output_path)
-        except Exception as e:
+        except Exception:
             print("Failed to create StreamWriter")
             import platform
 
@@ -184,17 +213,25 @@ def main():
         voice_mel = torch.from_numpy(voice_mel).to(tts.device)
         infer_time = 0.0
         audio_time = 0.0
-        for step, sentence in zip(step_generator, tqdm(sentences, desc="Generating Audio")):
+        for step, sentence in zip(
+            step_generator, tqdm(sentences, desc="Generating Audio")
+        ):
             print(f"Step {step}: {sentence}")
             with torch.inference_mode():
                 start_time = time.perf_counter()
-                generated_wav, sr = profiled_tts.infer_e2e(voice_mel, normalized_text=sentence)
+                generated_wav, sr = profiled_tts.infer_e2e(
+                    voice_mel, normalized_text=sentence
+                )
                 audio_time += generated_wav.shape[1] / sr
                 infer_time += time.perf_counter() - start_time
                 # generated_wav shape: [Channels, Frames]
                 # print(f"Generated wav shape: {generated_wav.shape}")
                 if not s._is_open:
-                    s.add_audio_stream(sample_rate=sr, num_channels=generated_wav.shape[0], format="s16")
+                    s.add_audio_stream(
+                        sample_rate=sr,
+                        num_channels=generated_wav.shape[0],
+                        format="s16",
+                    )
                     s.open()
                 # convert ot [Frames, Channels]
                 # torch.transpose(generated_wav, 0, 1)

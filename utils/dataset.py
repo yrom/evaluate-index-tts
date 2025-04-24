@@ -43,18 +43,20 @@ class DataSets:
 
     @classmethod
     def from_dict(cls, data):
-        audio_prompts = [AudioPrompt.from_dict(d) for d in data.get("audio_prompts", [])]
+        audio_prompts = [
+            AudioPrompt.from_dict(d) for d in data.get("audio_prompts", [])
+        ]
         zh_texts = data.get("zh")
         en_texts = data.get("en")
-        short_texts = [Text(text=t, lang="zh") for t in zh_texts.get("short_texts", [])] + [
-            Text(text=t, lang="en") for t in en_texts.get("short_texts", [])
-        ]
-        long_texts = [Text(text=t, lang="zh") for t in zh_texts.get("long_texts", [])] + [
-            Text(text=t, lang="en") for t in en_texts.get("long_texts", [])
-        ]
-        extra_texts = [Text(text=t, lang="zh") for t in zh_texts.get("extra_texts", [])] + [
-            Text(text=t, lang="en") for t in en_texts.get("extra_texts", [])
-        ]
+        short_texts = [
+            Text(text=t, lang="zh") for t in zh_texts.get("short_texts", [])
+        ] + [Text(text=t, lang="en") for t in en_texts.get("short_texts", [])]
+        long_texts = [
+            Text(text=t, lang="zh") for t in zh_texts.get("long_texts", [])
+        ] + [Text(text=t, lang="en") for t in en_texts.get("long_texts", [])]
+        extra_texts = [
+            Text(text=t, lang="zh") for t in zh_texts.get("extra_texts", [])
+        ] + [Text(text=t, lang="en") for t in en_texts.get("extra_texts", [])]
         return cls(
             audio_prompts=audio_prompts,
             short_texts=short_texts,
@@ -83,11 +85,17 @@ class DataSets:
             audio_prompts = [ap for ap in self.audio_prompts if ap.lang == lang]
 
         if text == "short":
-            texts = [t.text for t in self.short_texts if t.lang == lang or t.lang == "all"]
+            texts = [
+                t.text for t in self.short_texts if t.lang == lang or t.lang == "all"
+            ]
         elif text == "long":
-            texts = [t.text for t in self.long_texts if t.lang == lang or t.lang == "all"]
+            texts = [
+                t.text for t in self.long_texts if t.lang == lang or t.lang == "all"
+            ]
         elif text == "extra":
-            texts = [t.text for t in self.extra_texts if t.lang == lang or t.lang == "all"]
+            texts = [
+                t.text for t in self.extra_texts if t.lang == lang or t.lang == "all"
+            ]
         else:
             texts = [
                 t.text
@@ -144,7 +152,7 @@ def download_audio(audio: AudioPrompt, audio_path: str):
             raise ValueError(f"Failed to download {audio.url}: {response.status_code}")
 
 
-def load_audio_mel(audio: AudioPrompt, device = None):
+def load_audio_mel(audio: AudioPrompt, device=None):
     audio_mel_path = os.path.join("prompts", audio.lang, audio.name + ".npy")
     if os.path.exists(audio_mel_path):
         try:
@@ -165,7 +173,9 @@ def load_audio_mel(audio: AudioPrompt, device = None):
     melspec = extract_audio_melspec(audio_path, device)
     print(f"melspec shape: {melspec.shape}", "dtype:", melspec.dtype)
     if mel_spec.dim() != 3 or mel_spec.shape[0] != 1 or mel_spec.shape[1] != 100:
-        raise ValueError(f"Unexpected tensor shape: {mel_spec.shape}. Expected [1, 100, T]")
+        raise ValueError(
+            f"Unexpected tensor shape: {mel_spec.shape}. Expected [1, 100, T]"
+        )
     np.save(audio_mel_path, mel_spec.cpu().numpy().astype(np.float32))
     return mel_spec
 

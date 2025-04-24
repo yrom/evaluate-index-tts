@@ -2,6 +2,7 @@ from tqdm import tqdm as o_tqdm
 import contextlib
 import inspect
 
+
 @contextlib.contextmanager
 def _redirect_to_tqdm():
     # Store builtin print

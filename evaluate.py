@@ -11,7 +11,6 @@ import time
 from typing import List
 import warnings
 
-import numpy as np
 import torch
 import torchaudio
 
@@ -24,6 +23,7 @@ from utils.dataset import (
     load_audio_mel,
     load_dataset,
 )
+
 # Suppress warnings from tensorflow and other libraries
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -34,20 +34,31 @@ from indextts.infer import IndexTTS
 def prepare_prompts(test_set: DataSets, save_wav=False):
     os.makedirs("prompts", exist_ok=True)
 
-    for test_case in tqdm(test_set.audio_prompts, desc="Prepare audio prompts", file=sys.stdout):
+    for test_case in tqdm(
+        test_set.audio_prompts, desc="Prepare audio prompts", file=sys.stdout
+    ):
         audio_path = os.path.join("prompts", test_case.lang, test_case.name + ".wav")
-        audio_mel_path = os.path.join("prompts", test_case.lang, test_case.name + ".npy")
+        audio_mel_path = os.path.join(
+            "prompts", test_case.lang, test_case.name + ".npy"
+        )
         if save_wav and not os.path.exists(audio_path):
             try:
                 download_audio(test_case, audio_path)
             except Exception as e:
-                warnings.warn(f"Failed to download {test_case.name}: {e}", RuntimeWarning)
+                warnings.warn(
+                    f"Failed to download {test_case.name}: {e}", RuntimeWarning
+                )
                 continue
         if not os.path.exists(audio_mel_path):
             extract_audio_melspec_and_save(audio_path, audio_mel_path)
 
 
-def evaluate_model(model: IndexTTS, test_sets: tuple[List[AudioPrompt], List[str]], output_dir=None, verbose=False):
+def evaluate_model(
+    model: IndexTTS,
+    test_sets: tuple[List[AudioPrompt], List[str]],
+    output_dir=None,
+    verbose=False,
+):
     """
     Evaluate the model on the test set and save the results.
 
@@ -115,25 +126,75 @@ def main():
 
     subparser = parser.add_subparsers(dest="command", required=True)
     prepare = subparser.add_parser("prepare", help="Prepare the test set.")
-    prepare.add_argument("--test_set", type=str, default="testset.json", help="Path to the test set JSON file.")
-    prepare.add_argument("--save_wav", action="store_true", default=True, help="Save the original audio files.")
+    prepare.add_argument(
+        "--test_set",
+        type=str,
+        default="testset.json",
+        help="Path to the test set JSON file.",
+    )
+    prepare.add_argument(
+        "--save_wav",
+        action="store_true",
+        default=True,
+        help="Save the original audio files.",
+    )
     eval = subparser.add_parser("eval", help="Evaluate the model on the test set.")
 
-    eval.add_argument("--model_dir", type=str, required=True, help="Path to the indextts model checkpoints directory.")
-    eval.add_argument("--cfg_path", type=str, required=True, help="Path to the indextts model config file.")
-    eval.add_argument("--test_set", type=str, default="testset.json", help="Path to the test set JSON file.")
-    eval.add_argument("--output_dir", type=str, default=None, help="Directory to save the evaluation results.")
     eval.add_argument(
-        "--device", type=str, default=None, help="Device to run the model on (e.g., 'cpu', 'cuda', 'mps')."
+        "--model_dir",
+        type=str,
+        required=True,
+        help="Path to the indextts model checkpoints directory.",
     )
-    eval.add_argument("--enable_cuda_kernel", action="store_true", help="Enable custom CUDA kernel for BigVGAN.")
+    eval.add_argument(
+        "--cfg_path",
+        type=str,
+        required=True,
+        help="Path to the indextts model config file.",
+    )
+    eval.add_argument(
+        "--test_set",
+        type=str,
+        default="testset.json",
+        help="Path to the test set JSON file.",
+    )
+    eval.add_argument(
+        "--output_dir",
+        type=str,
+        default=None,
+        help="Directory to save the evaluation results.",
+    )
+    eval.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="Device to run the model on (e.g., 'cpu', 'cuda', 'mps').",
+    )
+    eval.add_argument(
+        "--enable_cuda_kernel",
+        action="store_true",
+        help="Enable custom CUDA kernel for BigVGAN.",
+    )
     eval.add_argument("--fp16", action="store_true", help="Use fp16 for inference.")
-    eval.add_argument("--no-fp16", action="store_false", dest="fp16", help="Disable fp16 for inference.")
+    eval.add_argument(
+        "--no-fp16",
+        action="store_false",
+        dest="fp16",
+        help="Disable fp16 for inference.",
+    )
     eval.add_argument("--verbose", action="store_true", help="Enable verbose mode.")
-    eval.add_argument("--eanble_deepspeed", action="store_true", help="Enable DeepSpeed for inference.")
+    eval.add_argument(
+        "--eanble_deepspeed",
+        action="store_true",
+        help="Enable DeepSpeed for inference.",
+    )
 
     eval.add_argument(
-        "--lang", type=str, default="zh", choices=["zh", "en", "all"], help="Language of the audio prompt."
+        "--lang",
+        type=str,
+        default="zh",
+        choices=["zh", "en", "all"],
+        help="Language of the audio prompt.",
     )
     eval.add_argument(
         "--text-type",
@@ -142,7 +203,12 @@ def main():
         choices=["short", "long", "extra", "all"],
         help="Type of text to evaluate.",
     )
-    eval.add_argument("--limit", type=int, default=None, help="Limit the number of test samples to evaluate.")
+    eval.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Limit the number of test samples to evaluate.",
+    )
     args = parser.parse_args()
 
     command = args.command
@@ -164,15 +230,22 @@ def main():
     if args.device is None:
         # Check if MPS is available (for MacOS)
         import platform
-        if platform.system() == "Darwin" and hasattr(torch, "mps") and torch.mps.is_available():
+
+        if (
+            platform.system() == "Darwin"
+            and hasattr(torch, "mps")
+            and torch.mps.is_available()
+        ):
             args.device = "mps"
         elif torch.cuda.is_available():
             args.device = "cuda:0"
             device_prop = torch.cuda.get_device_properties(args.device)
-            print("CUDA device properties:", 
-                  f"Name: {device_prop.name}, "
-                  f"Total Memory: {device_prop.total_memory / (1024 ** 3):.2f} GB, "
-                  f"Compute Capability: {device_prop.major}.{device_prop.minor}")
+            print(
+                "CUDA device properties:",
+                f"Name: {device_prop.name}, "
+                f"Total Memory: {device_prop.total_memory / (1024**3):.2f} GB, "
+                f"Compute Capability: {device_prop.major}.{device_prop.minor}",
+            )
         else:
             args.device = "cpu"
             warnings.warn(
@@ -202,10 +275,13 @@ def main():
     )
     # Evaluate model
     from csv import writer
+
     csv_header = None
     with open(report, "w", encoding="utf-8") as f:
         cvs_writer = writer(f)
-        for result in evaluate_model(model, test_sets, output_dir=args.output_dir, verbose=args.verbose):
+        for result in evaluate_model(
+            model, test_sets, output_dir=args.output_dir, verbose=args.verbose
+        ):
             if csv_header is None:
                 csv_header = result.keys()
                 cvs_writer.writerow(csv_header)

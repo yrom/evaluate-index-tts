@@ -237,8 +237,6 @@ def read_csv(file_path) -> list[dict]:
     return csv_data
 
 
-
-
 def list_device_info():
     import platform
     import psutil
@@ -264,7 +262,11 @@ def list_device_info():
             device_info.append(
                 f"CUDA Device {i} Memory: {round(torch.cuda.get_device_properties(i).total_memory / (1024**3), 2)} GB"
             )
-    elif platform.system() == "Darwin" and hasattr(torch, "mps") and torch.mps.is_available():
+    elif (
+        platform.system() == "Darwin"
+        and hasattr(torch, "mps")
+        and torch.mps.is_available()
+    ):
         device_info.extend(
             [
                 "MPS Available: Yes",
@@ -273,11 +275,17 @@ def list_device_info():
     return device_info
 
 
-def generate_html_report_for_single_result(result_name, result_dict, summary, merge_key):
+def generate_html_report_for_single_result(
+    result_name, result_dict, summary, merge_key
+):
     device_info = list_device_info()
     template = Template(TEMPLATE_FOR_SINGLE_RESULT)
     return template.render(
-        result_name=result_name, result_dict=result_dict, summary=summary, merge_key=merge_key, device_info=device_info
+        result_name=result_name,
+        result_dict=result_dict,
+        summary=summary,
+        merge_key=merge_key,
+        device_info=device_info,
     )
 
 
@@ -298,6 +306,7 @@ def plot_waveform_wrapper(params):
     audio_path, savepath = params
     import torchaudio
     from utils.plot import plot_waveform
+
     waveform, sample_rate = torchaudio.load(audio_path)
     print(f"Plotting waveform for {audio_path} to {savepath}")
     plot_waveform(waveform, sample_rate, fig_save_path=savepath, show=False)
@@ -311,8 +320,16 @@ def prompt_key(d: dict) -> tuple[str, str]:
 def report_for_single_result(result_csv: str):
     result = read_csv(result_csv)
     result_name = os.path.splitext(os.path.basename(result_csv))[0]
-    merge_key = ["output_path", "gpt_gen_time", "gpt_forward_time", "bigvgan_time", "rtf"]
-    result_dict = dict(map(lambda d: (prompt_key(d), {k: d[k] for k in merge_key}), result))
+    merge_key = [
+        "output_path",
+        "gpt_gen_time",
+        "gpt_forward_time",
+        "bigvgan_time",
+        "rtf",
+    ]
+    result_dict = dict(
+        map(lambda d: (prompt_key(d), {k: d[k] for k in merge_key}), result)
+    )
     indicators = ["gpt_gen_time", "gpt_forward_time", "bigvgan_time", "rtf"]
     summary = {}
     for k, vv in result_dict.items():
@@ -346,7 +363,9 @@ def report_for_single_result(result_csv: str):
     if len(plot_params) > 10:
         import multiprocessing
 
-        num_processes = min(max(4, len(plot_params) // 4), psutil.cpu_count(logical=True))
+        num_processes = min(
+            max(4, len(plot_params) // 4), psutil.cpu_count(logical=True)
+        )
         with multiprocessing.Pool(processes=num_processes) as pool:
             pool.map(plot_waveform_wrapper, plot_params)
     else:
@@ -354,7 +373,9 @@ def report_for_single_result(result_csv: str):
             plot_waveform_wrapper(params)
 
     # write html report
-    html_report = generate_html_report_for_single_result(result_name, result_dict, summary, merge_key)
+    html_report = generate_html_report_for_single_result(
+        result_name, result_dict, summary, merge_key
+    )
 
     report_name = f"indextts_evaluate_report_{time.strftime('%Y%m%d_%H%M%S')}.html"
     with open(report_name, "w", encoding="utf-8") as f:
@@ -365,9 +386,20 @@ def report_for_single_result(result_csv: str):
 def report_for_multi_results(baseline_csv: str, files: List[str]):
     baseline = read_csv(baseline_csv)
     baseline_name = os.path.splitext(os.path.basename(baseline_csv))[0]
-    merge_key = ["output_path", "gpt_gen_time", "gpt_forward_time", "bigvgan_time", "rtf"]
+    merge_key = [
+        "output_path",
+        "gpt_gen_time",
+        "gpt_forward_time",
+        "bigvgan_time",
+        "rtf",
+    ]
 
-    result_dict = dict(map(lambda d: (prompt_key(d), {"baseline": {k: d[k] for k in merge_key}}), baseline))
+    result_dict = dict(
+        map(
+            lambda d: (prompt_key(d), {"baseline": {k: d[k] for k in merge_key}}),
+            baseline,
+        )
+    )
 
     keys = result_dict.keys()
     filenames = [os.path.splitext(os.path.basename(file))[0] for file in files]
@@ -404,7 +436,9 @@ def report_for_multi_results(baseline_csv: str, files: List[str]):
                     values_of_file[indicator] = []
                 values_of_file[indicator].append(vv[indicator])
 
-        summary[filename] = {indicator: np.mean(value) for indicator, value in values_of_file.items()}
+        summary[filename] = {
+            indicator: np.mean(value) for indicator, value in values_of_file.items()
+        }
         print(f"Summary of {filename}")
         print(json.dumps(summary[filename], indent=4))
         print("===" * 10)
@@ -430,16 +464,22 @@ def report_for_multi_results(baseline_csv: str, files: List[str]):
     # plot waveform in subprocess
     if len(plot_params) > 10:
         import multiprocessing
-        num_processes = min(max(4, len(plot_params) // 4), psutil.cpu_count(logical=True))
+
+        num_processes = min(
+            max(4, len(plot_params) // 4), psutil.cpu_count(logical=True)
+        )
         with multiprocessing.Pool(processes=num_processes) as pool:
             pool.map(plot_waveform_wrapper, plot_params)
     else:
         from utils.tqdm import tqdm
+
         for params in tqdm(plot_params):
             plot_waveform_wrapper(params)
 
     # write html report
-    html_report = generate_html_report(result_dict, summary, merge_key, baseline_name, filenames)
+    html_report = generate_html_report(
+        result_dict, summary, merge_key, baseline_name, filenames
+    )
 
     report_name = f"indextts_evaluate_report_{time.strftime('%Y%m%d_%H%M%S')}.html"
     with open(report_name, "w", encoding="utf-8") as f:

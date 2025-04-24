@@ -2,7 +2,14 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-def plot_waveform(waveform: np.ndarray, sample_rate: int, plot_width=5, plot_height=2, fig_save_path=None, show=True):
+def plot_waveform(
+    waveform: np.ndarray,
+    sample_rate: int,
+    plot_width=5,
+    plot_height=2,
+    fig_save_path=None,
+    show=True,
+):
     """
     Plot the waveform and spectrogram of the audio signal.
     Args:
@@ -14,7 +21,9 @@ def plot_waveform(waveform: np.ndarray, sample_rate: int, plot_width=5, plot_hei
     num_channels, num_frames = waveform.shape
     time_axis = np.arange(0, num_frames) / sample_rate
 
-    figure, axes = plt.subplots(num_channels * 2, 1, figsize=(plot_width, plot_height * num_channels))
+    figure, axes = plt.subplots(
+        num_channels * 2, 1, figsize=(plot_width, plot_height * num_channels)
+    )
     wav_axes = axes[:num_channels]
     wavspec_axes = axes[num_channels:]
     # spec_axes = axes[num_channels * 2 :]
@@ -49,6 +58,7 @@ if __name__ == "__main__":
     import torchaudio
     import sys
     import os
+
     input = sys.argv[1] if len(sys.argv) > 1 else "example.wav"
     if not os.path.exists(input):
         print(f"Audio file {input} does not exist.")
@@ -58,6 +68,6 @@ if __name__ == "__main__":
     print(f"Waveform shape: {waveform.shape}")
     print(f"Sample rate: {sample_rate}")
     waveform_save_path = os.path.splitext(input)[0] + ".png"
-    plot_waveform(waveform.numpy(), sample_rate, 8, 3,  waveform_save_path, show=False)
+    plot_waveform(waveform.numpy(), sample_rate, 8, 3, waveform_save_path, show=False)
     del waveform
     print("Waveform plot saved to: ", waveform_save_path)
